@@ -1,6 +1,6 @@
 {
-    "name": "devel/dashboard-module",
-    "description": "The original admin dashboard module for devel/devel`",
+    "name": "devel/devel-dashboard-module",
+    "description": "The original admin dashboard module for devel/devel",
     "type": "devel-module",
     "authors": [
         {
