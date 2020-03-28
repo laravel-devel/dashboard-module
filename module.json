@@ -1,0 +1,14 @@
+{
+    "name": "DevelDashboard",
+    "alias": "develdashboard",
+    "description": "The original admin dashboard module for Devel.",
+    "keywords": [],
+    "order": 1,
+    "providers": [
+        "Modules\\DevelDashboard\\Providers\\DevelDashboardServiceProvider"
+    ],
+    "aliases": {},
+    "files": [],
+    "requires": [],
+    "buildNpm": true
+}

@@ -1,0 +1,26 @@
+{
+    "name": "devel/dashboard-module",
+    "description": "The original admin dashboard module for devel/devel`",
+    "type": "devel-module",
+    "authors": [
+        {
+            "name": "Alexander Zavyalov",
+            "email": "alex@voerro.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Modules\\DevelDashboard\\Providers\\DevelDashboardServiceProvider"
+            ],
+            "aliases": {
+
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\DevelDashboard\\": ""
+        }
+    }
+}
