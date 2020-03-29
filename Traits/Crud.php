@@ -333,12 +333,11 @@ trait Crud
                 continue;
             }
 
-            $value = $request->get($name) ?: (
-                $item ? $item->{$name} : []
-            );
+            $value = $request->get($name) ?? ($item ? null : []);
 
-            if (is_object($value)) {
-                $value = $value->toArray();
+            // If the value hasn't changed
+            if ($value === null) {
+                continue;
             }
 
             switch ($attrs['type']) {

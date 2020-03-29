@@ -77,8 +77,9 @@
 
         <input v-else
             type="hidden"
-            :name="attrs.name"
+            :name="`${attrs.name}[]`"
             autocomplete="off"
+            value=''
             v-model="selections">
     </div>
 </template>
