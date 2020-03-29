@@ -185,11 +185,17 @@ trait Crud
      */
     public function get(Request $request)
     {
-        $data = $this->model()::sort($request->sort)
-            ->search($request->search)
-            ->paginate($this->itemsPerPage);
+        $query = $this->model()::sort($request->sort)
+            ->search($request->search);
 
-        return response()->json($data);
+        // If any of the datatable columns contain relationships
+        foreach ($this->datatable() as $key => $attrs) {
+            if (strpos($key, '.') !== false) {
+                $query->with(explode('.', $key)[0]);
+            }
+        }
+
+        return response()->json($query->paginate($this->itemsPerPage));
     }
 
     /**
@@ -352,12 +358,12 @@ trait Crud
                     $item->{$name}()->sync(array_filter($value));
 
                     break;
-                // TODO: missing relationships (you can get the locale/foreign
-                // keys via $attrs['relation'] or maybe I can directly set the
-                // relations via Eloquent?)
-                // - HasMany (probably exact same code as for 'BelongsToMany')
-                // - BelongsToOne
-                // - HasOne
+                    // TODO: missing relationships (you can get the locale/foreign
+                    // keys via $attrs['relation'] or maybe I can directly set the
+                    // relations via Eloquent?)
+                    // - HasMany (probably exact same code as for 'BelongsToMany')
+                    // - BelongsToOne
+                    // - HasOne
             }
         }
 

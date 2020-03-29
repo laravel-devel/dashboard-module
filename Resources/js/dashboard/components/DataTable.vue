@@ -185,7 +185,21 @@ export default {
         },
 
         formatted(field, item, key) {
-            let value = item[key];
+            let value;
+
+            if (key.indexOf('.') > -1) {
+                // A relationship field
+                const keys = key.split('.');
+                value = item[keys[0]];
+
+                for (let i = 1; i < keys.length; i++) {
+                    value = value[keys[i]];
+                }
+            } else {
+                // A regular field
+                value = item[key];
+            }
+
             let formatted = value;
 
             if (field.format) {
