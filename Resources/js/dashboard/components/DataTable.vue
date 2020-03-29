@@ -41,9 +41,9 @@
                 
                 <tbody>
                     <tr v-for="(item, index) in items" :key="index">
-                        <td v-for="key in Object.keys(fields)" :key="key">
-                            {{ formatted(fields[key], item[key]) }}
-                        </td>
+                        <td v-for="key in Object.keys(fields)"
+                            :key="key"
+                            v-html="formatted(fields[key], item, key)"></td>
 
                         <td v-if="hasActions" class="actions">
                             <a v-if="actions.delete && allowedTo('delete')"
@@ -184,7 +184,8 @@ export default {
             this.fetchData();
         },
 
-        formatted(field, value) {
+        formatted(field, item, key) {
+            let value = item[key];
             let formatted = value;
 
             if (field.format) {
