@@ -139,7 +139,7 @@ export default {
             }
 
             this.attrs.checked = this.attrs.checked === undefined
-                ? this.value
+                ? (!! this.val)
                 : this.attrs.checked;
         },
 
