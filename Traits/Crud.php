@@ -337,6 +337,10 @@ trait Crud
                 $item ? $item->{$name} : []
             );
 
+            if (is_object($value)) {
+                $value = $value->toArray();
+            }
+
             switch ($attrs['type']) {
                 case 'BelongsToMany':
                     // array_filters removes the null values
