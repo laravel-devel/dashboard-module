@@ -51,6 +51,13 @@ trait Crud
     protected $formFields = [];
 
     /**
+     * Datatable - items per page
+     *
+     * @var integer
+     */
+    protected $itemsPerPage = 20;
+
+    /**
      * Set the model class
      *
      * @param string $class
@@ -100,7 +107,7 @@ trait Crud
                 }
             }
         }
-        
+
         $this->formFields = $fields;
     }
 
@@ -110,7 +117,7 @@ trait Crud
      * @param array $actions
      * @return void
      */
-    protected function setActions(array $actions):void
+    protected function setActions(array $actions): void
     {
         foreach ($actions as $action => $values) {
             $this->datatableActions[$action] = route($values[0], $values[1] ?? null);
@@ -140,7 +147,7 @@ trait Crud
     {
         return $this->datatableFields;
     }
-    
+
     /**
      * Return the datatable fields list
      *
@@ -180,7 +187,7 @@ trait Crud
     {
         $data = $this->model()::sort($request->sort)
             ->search($request->search)
-            ->paginate(20);
+            ->paginate($this->itemsPerPage);
 
         return response()->json($data);
     }
@@ -244,7 +251,7 @@ trait Crud
                 'message' => $can,
             ], 409);
         }
-        
+
         $model = new $this->modelClass;
 
         $object = $this->model()::where($model->getRouteKeyName(), $id)->first();
@@ -305,8 +312,7 @@ trait Crud
         $table = $model->getTable();
         $columns = Schema::getColumnListing($table);
 
-        foreach ($columns as $field)
-        {
+        foreach ($columns as $field) {
             $columnType = DB::getSchemaBuilder()
                 ->getColumnType($table, $field);
 
@@ -383,5 +389,20 @@ trait Crud
     protected function alterValues($request, array $values, $item = null): array
     {
         return $values;
+    }
+
+    /**
+     * Set the datatable number of items per page.
+     *
+     * @param integer $number
+     * @return void
+     */
+    protected function setItemsPerPage(int $number): void
+    {
+        if ($number < 1) {
+            $number = 1;
+        }
+
+        $this->itemsPerPage = $number;
     }
 }
