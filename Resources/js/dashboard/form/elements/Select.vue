@@ -130,6 +130,8 @@ export default {
             for (let item of this.value) {
                 this.selectedOptions.push(this.formatOption(item));
             }
+        } else if (this.attrs.required) {
+            this.selectedOptions.push(this.formatOption(this.options[0]))
         }
 
         this.calculateAvailableOptions();

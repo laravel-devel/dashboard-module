@@ -37,6 +37,13 @@ trait Crud
     protected $datatableActions = [];
 
     /**
+     * List of datatable filters.
+     *
+     * @var array
+     */
+    protected $datatableFilters = [];
+
+    /**
      * List of required CRUD permissions.
      *
      * @var array
@@ -84,12 +91,14 @@ trait Crud
      *
      * @param array $fields
      * @param array $actions
+     * @param array $filters
      * @return void
      */
-    protected function setDatatable(array $fields, array $actions = []): void
+    protected function setDatatable(array $fields, array $actions = [], array $filters = []): void
     {
         $this->datatableFields = $fields;
         $this->setActions($actions);
+        $this->datatableFilters = $filters;
     }
 
     /**
@@ -159,7 +168,17 @@ trait Crud
     }
 
     /**
-     * Return the datatable fields list
+     * Return the datatable filters list
+     *
+     * @return array
+     */
+    protected function filters(): array
+    {
+        return $this->datatableFilters;
+    }
+
+    /**
+     * Return the datatable permissions
      *
      * @return array
      */

@@ -1,5 +1,33 @@
 <template>
     <div class="datatable">
+        <div v-if="this.filterFields.length > 0">
+            <p class="mb-1">
+                <strong>Filter</strong>
+            </p>
+
+            <div class="flex flex-wrap space-between mb-1">
+                <div v-for="(filter, index) in this.filterFields" :key="index" class="mr-05 ml-05 mb-1">
+                    <div class="mb-05 text-semibold">{{ filter.label }}:</div>
+
+                    <v-form-el v-if="filter.type === 'select'"
+                        :inline="true"
+                        :field="{
+                            type: 'select',
+                            attrs: filter.attrs,
+                        }"
+                        :collections="{ [filter.name]: filter.options }"
+                        class="search-field"></v-form-el>
+
+                    <v-form-el v-else
+                        :inline="true"
+                        :field="{
+                            type: 'text'
+                        }"
+                        class="search-field"></v-form-el>
+                </div>
+            </div>
+        </div>
+
         <div class="flex pb-1">
             <div v-if="searchOn" class="flex flex-align-center flex-1">
                 <span class="mr-1">Search:</span>
@@ -104,6 +132,10 @@ export default {
             },
         },
 
+        filters: {
+            default: {},
+        },
+
         permissions: {
             default: () => {
                 return {};
@@ -147,11 +179,13 @@ export default {
             sortAsc: true,
             searchQuery: '',
             searchTimeout: null,
+            filterFields: [],
         };
     },
  
     created() {
         this.parseDefaultSorting();
+        this.parseFilters();
         this.fetchData();
     },
 
@@ -179,6 +213,51 @@ export default {
 
             this.sort = parts[0];
             this.sortAsc = parts[1].toLowerCase() === 'asc';
+        },
+
+        parseFilters() {
+            if (typeof this.filters !== 'object') {
+                return;
+            }
+
+            for (let name of Object.keys(this.filters)) {
+                const field = this.filters[name];
+
+                if (field.options) {
+                    let options = [];
+
+                    if (field.options.length && typeof field.options[0] === 'string') {
+                        for (let value of field.options) {
+                            options.push({
+                                [name]: value,
+                            });
+                        }
+                    } else {
+                        options = field.options;
+                    }
+
+                    this.filterFields.push({
+                        name: name,
+                        label: field.name,
+                        type: 'select',
+                        options: options,
+                        attrs: field.attrs
+                            ? Object.assign(field.attrs, { collection: name })
+                            : {
+                                idField: name,
+                                textField: name,
+                                collection: name,
+                            },
+                    });
+                    
+                } else {
+                    this.filterFields.push({
+                        name: name,
+                        label: field.name,
+                        type: 'text',
+                    });
+                }
+            }
         },
 
         fetchData() {
