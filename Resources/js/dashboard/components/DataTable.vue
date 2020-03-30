@@ -163,9 +163,24 @@ export default {
 
     computed: {
         endpoint() {
-            // TODO: Add filters
+            // Filters
+            let filters = '';
             
-            return `${this.baseUrl}?page=${this.page}&sort=${this.sort}|${this.sortAsc ? 'asc' : 'desc'}&search=${this.searchQuery}`;
+            for (let filter of this.filterFields) {
+                if (filter.value === undefined || filter.value === null) {
+                    continue;
+                }
+
+                let value = filter.value;
+
+                if (Array.isArray(value)) {
+                    value = value.join('|');
+                }
+
+                filters += `&f_${filter.name}=${value}`;
+            }
+
+            return `${this.baseUrl}?page=${this.page}&sort=${this.sort}|${this.sortAsc ? 'asc' : 'desc'}&search=${this.searchQuery}${filters}`;
         },
 
         hasActions() {
@@ -257,6 +272,8 @@ export default {
                         options = field.options;
                     }
 
+                    const idField = field.attrs ? field.attrs.idField : name;
+
                     this.filterFields.push({
                         name: name,
                         label: field.name,
@@ -265,11 +282,13 @@ export default {
                         attrs: field.attrs
                             ? Object.assign(field.attrs, { collection: name })
                             : {
-                                idField: name,
+                                idField: idField,
                                 textField: name,
                                 collection: name,
                             },
-                        value: null,
+                        value: (field.attrs && field.attrs.required)
+                            ? [options[0][idField]]
+                            : null,
                     });
                     
                 } else {
