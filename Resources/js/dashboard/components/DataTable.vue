@@ -193,20 +193,24 @@ export default {
                 value = item[keys[0]];
 
                 for (let i = 1; i < keys.length; i++) {
+                    if (typeof value !== 'object' || !value) {
+                        break;
+                    }
+
                     value = value[keys[i]];
-                }
+                 }
             } else {
                 // A regular field
                 value = item[key];
             }
 
-            let formatted = value;
+            value = value ? value : '-';
 
             if (field.format) {
-                formatted = eval(field.format);
+                return eval(field.format);
             }
             
-            return formatted ? formatted : '-';
+            return value;
         },
 
         actionEndpoint(url, item) {
