@@ -191,7 +191,21 @@ trait Crud
         // If any of the datatable columns contain relationships
         foreach ($this->datatable() as $key => $attrs) {
             if (strpos($key, '.') !== false) {
-                $query->with(explode('.', $key)[0]);
+                $relation = explode('.', $key)[0];
+
+                // Sometimes a relationship could not be found because the
+                // string is in a wrong case (camel instead of snake or
+                // vise-versa)
+                if (!method_exists($this->model(), $relation)) {
+                    $relation = strpos($relation, '_') !== false
+                        ? \Str::camel($relation)
+                        : \Str::snake($relation);
+                }
+
+                // If the relationship still doesn't exist - let it throw an 
+                // exception
+
+                $query->with($relation);
             }
         }
 
