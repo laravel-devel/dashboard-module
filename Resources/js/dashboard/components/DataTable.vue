@@ -397,7 +397,13 @@ export default {
             value = value ? value : '-';
 
             if (field.format) {
-                return eval(field.format);
+                // Sometimes a relationship that is referenced in the format
+                // string is missing
+                try {
+                    return eval(field.format);
+                } catch (error) {
+                    return '-';
+                }
             }
             
             return value;
