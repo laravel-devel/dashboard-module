@@ -45,7 +45,7 @@
             <div v-else class="flex flex-align-center flex-1"></div>
 
             <div v-if="hasActions && actions.create && allowedTo('create')">
-                <a :href="actions.create" class="btn">Add</a>
+                <a :href="actions.create.url" class="btn">Add</a>
             </div>
         </div>
 
@@ -82,18 +82,33 @@
                                 href="#"
                                 class="action-btn danger"
                                 title="Delete"
-                                @click.prevent="deleteItemConfirm(item, actions.delete)"
+                                @click.prevent="deleteItemConfirm(item, actions.delete.url)"
                             >
                                 <i class="las la-trash"></i>
                             </a>
 
                             <a v-if="actions.edit && (allowedTo('edit') || allowedTo('view'))"
-                                :href="actionEndpoint(actions.edit, item)"
+                                :href="actionEndpoint(actions.edit.url, item)"
                                 class="action-btn primary"
                                 title="Edit"
                             >
                                 <i class="las la-edit"></i>
                             </a>
+
+                            <template v-for="(action, index) in customActions">
+                                <a v-if="allowedTo(action.name)"
+                                    :key="index"
+                                    href="#"
+                                    :class="`action-btn ${action.class ? action.class : 'primary'}`"
+                                    :title="action.title ? action.title : ''"
+                                    @click.prevent="doCustomAction(action, item)"
+                                >
+                                    <i v-if="action.icon"
+                                        :class="`las ${action.icon}`"></i>
+
+                                    <span v-else v-text="action.title"></span>
+                                </a>
+                            </template>
                         </td>
                     </tr>
                 </tbody>
@@ -135,7 +150,9 @@ export default {
         },
 
         filters: {
-            default: {},
+            default: () => {
+                return {};
+            },
         },
 
         permissions: {
@@ -202,12 +219,20 @@ export default {
             searchQuery: '',
             searchTimeout: null,
             filterFields: [],
+
+            defaultActions: [
+                'create',
+                'edit',
+                'delete',
+            ],
+            customActions: [],
         };
     },
  
     created() {
         this.parseDefaultSorting();
         this.parseFilters();
+        this.parseCustomActions();
         this.fetchData();
 
         this.$nextTick(() => {
@@ -301,6 +326,18 @@ export default {
                         value: null,
                     });
                 }
+            }
+        },
+
+        parseCustomActions() {
+            for (let name of Object.keys(this.actions)) {
+                if (this.defaultActions.indexOf(name) > -1) {
+                    continue;
+                }
+
+                this.customActions.push(Object.assign(this.actions[name], {
+                    name: name,
+                }));
             }
         },
 
@@ -419,6 +456,31 @@ export default {
 
             return $auth.hasPermissions(this.permissions[action]);
         },
+
+        doCustomAction(action, item) {
+            const endpoint = this.actionEndpoint(action.url, item);
+            const method = action.method ? action.method : 'post';
+
+            axios[method](endpoint)
+                .then((response) => {
+                    this.fetchData();
+
+                    const msg = action.success
+                        ? action.success
+                        : 'Action has been performed successfully!';
+
+                    this.$notify(msg, 'success');
+                })
+                .catch(({ response }) => {
+                    let error = response.data.message
+                        ? response.data.message
+                        : 'Something went wrong!';
+
+                    this.$notify(error, 'error');
+
+                    this.processing = false;
+                });
+        }
     }
 }
 </script>

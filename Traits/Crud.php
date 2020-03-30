@@ -130,11 +130,23 @@ trait Crud
     protected function setActions(array $actions): void
     {
         foreach ($actions as $action => $values) {
-            $this->datatableActions[$action] = route($values[0], $values[1] ?? null);
+            if (is_numeric(array_keys($values)[0])) {
+                $this->datatableActions[$action] = [
+                    'url' => route($values[0], $values[1] ?? null),
+                ];
+
+                $route = $values[0];
+            } else {
+                $route = $values['url'][0];
+
+                $values['url'] = route($values['url'][0], $values['url'][1] ?? null);
+
+                $this->datatableActions[$action] = $values;
+            }
 
             // Set permissions for each route
             $this->datatablePermissions[$action] =
-                \Route::getRoutes()->getByName($values[0])->getAction()['permissions'] ?? [];
+                \Route::getRoutes()->getByName($route)->getAction()['permissions'] ?? [];
         }
     }
 
@@ -378,12 +390,12 @@ trait Crud
                     $item->{$name}()->sync(array_filter($value));
 
                     break;
-                    // TODO: missing relationships (you can get the locale/foreign
-                    // keys via $attrs['relation'] or maybe I can directly set the
-                    // relations via Eloquent?)
-                    // - HasMany (probably exact same code as for 'BelongsToMany')
-                    // - BelongsToOne
-                    // - HasOne
+                // TODO: missing relationships (you can get the locale/foreign
+                // keys via $attrs['relation'] or maybe I can directly set the
+                // relations via Eloquent?)
+                // - HasMany (probably exact same code as for 'BelongsToMany')
+                // - BelongsToOne
+                // - HasOne
             }
         }
 
