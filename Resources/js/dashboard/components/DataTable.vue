@@ -172,12 +172,14 @@ export default {
                 }
 
                 let value = filter.value;
+                // Dots get converted to underscores when sending form data, so:
+                let name = filter.name.replace(/\./g, '__');
 
                 if (Array.isArray(value)) {
                     value = value.join('|');
                 }
 
-                filters += `&f_${filter.name}=${value}`;
+                filters += `&f_${name}=${value}`;
             }
 
             return `${this.baseUrl}?page=${this.page}&sort=${this.sort}|${this.sortAsc ? 'asc' : 'desc'}&search=${this.searchQuery}${filters}`;

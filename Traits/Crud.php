@@ -2,6 +2,7 @@
 
 namespace Modules\DevelDashboard\Traits;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -204,30 +205,15 @@ trait Crud
      */
     public function get(Request $request)
     {
-        $query = $this->model()::sort($request->sort)
+        $model = $this->model();
+        $table = (new $model)->getTable();
+
+        $query = $this->model()::select("{$table}.*")
+            ->sort($request->sort)
             ->filter($request)
             ->search($request->search);
 
-        // If any of the datatable columns contain relationships
-        foreach ($this->datatable() as $key => $attrs) {
-            if (strpos($key, '.') !== false) {
-                $relation = explode('.', $key)[0];
-
-                // Sometimes a relationship could not be found because the
-                // string is in a wrong case (camel instead of snake or
-                // vise-versa)
-                if (!method_exists($this->model(), $relation)) {
-                    $relation = strpos($relation, '_') !== false
-                        ? \Str::camel($relation)
-                        : \Str::snake($relation);
-                }
-
-                // If the relationship still doesn't exist - let it throw an 
-                // exception
-
-                $query->with($relation);
-            }
-        }
+        $query = $this->eagerLoadRelationships($query);
 
         return response()->json($query->paginate($this->itemsPerPage));
     }
@@ -444,5 +430,37 @@ trait Crud
         }
 
         $this->itemsPerPage = $number;
+    }
+
+    /**
+     * Eager load relationships for the datatable columns.
+     *
+     * @param Illuminate\Database\Eloquent\Builder $query
+     * @return Illuminate\Database\Eloquent\Builder
+     */
+    protected function eagerLoadRelationships(Builder $query): Builder
+    {
+        // If any of the datatable columns contain relationships
+        foreach ($this->datatable() as $key => $attrs) {
+            if (strpos($key, '.') !== false) {
+                $relation = explode('.', $key)[0];
+
+                // Sometimes a relationship could not be found because the
+                // string is in a wrong case (camel instead of snake or
+                // vise-versa)
+                if (!method_exists($this->model(), $relation)) {
+                    $relation = strpos($relation, '_') !== false
+                        ? \Str::camel($relation)
+                        : \Str::snake($relation);
+                }
+
+                // If the relationship still doesn't exist - let it throw an 
+                // exception
+
+                $query->with($relation);
+            }
+        }
+
+        return $query;
     }
 }
