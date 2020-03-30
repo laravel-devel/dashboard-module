@@ -205,6 +205,7 @@ trait Crud
     public function get(Request $request)
     {
         $query = $this->model()::sort($request->sort)
+            ->filter($request)
             ->search($request->search);
 
         // If any of the datatable columns contain relationships
