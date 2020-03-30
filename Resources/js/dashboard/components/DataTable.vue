@@ -107,6 +107,10 @@ export default {
             },
         },
 
+        sortBy: {
+            type: String,
+        },
+
         deleteConfirmation: {
             type: String,
             default: 'Are you sure you want to delete this item?',
@@ -137,6 +141,7 @@ export default {
     },
  
     created() {
+        this.parseDefaultSorting();
         this.fetchData();
     },
 
@@ -151,6 +156,21 @@ export default {
     },
 
     methods: {
+        parseDefaultSorting() {
+            if (!this.sortBy) {
+                return;
+            }
+
+            let parts = this.sortBy.split('|');
+
+            if (parts.length < 2) {
+                return;
+            }
+
+            this.sort = parts[0];
+            this.sortAsc = parts[1].toLowerCase() === 'asc';
+        },
+
         fetchData() {
             this.processing = true;
 
