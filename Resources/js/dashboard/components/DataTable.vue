@@ -1,7 +1,7 @@
 <template>
     <div class="datatable">
         <div class="flex pb-1">
-            <div class="flex flex-align-center flex-1">
+            <div v-if="searchOn" class="flex flex-align-center flex-1">
                 <span class="mr-1">Search:</span>
 
                 <v-form-el :inline="true"
@@ -11,6 +11,8 @@
                     v-model="searchQuery"
                     class="search-field"></v-form-el>
             </div>
+
+            <div v-else class="flex flex-align-center flex-1"></div>
 
             <div v-if="hasActions && actions.create && allowedTo('create')">
                 <a :href="actions.create" class="btn">Add</a>
@@ -95,6 +97,7 @@ export default {
             required: true,
         },
 
+        // Row actions
         actions: {
             default: () => {
                 return {};
@@ -107,8 +110,15 @@ export default {
             },
         },
 
+        // Default sorting
         sortBy: {
             type: String,
+        },
+
+        // Whether the search input should be visible
+        searchOn: {
+            type: Boolean,
+            default: true,
         },
 
         deleteConfirmation: {
