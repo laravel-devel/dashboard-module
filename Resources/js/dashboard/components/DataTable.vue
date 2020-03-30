@@ -16,6 +16,7 @@
                             attrs: filter.attrs,
                         }"
                         :collections="{ [filter.name]: filter.options }"
+                        v-model="filter.value"
                         class="search-field"></v-form-el>
 
                     <v-form-el v-else
@@ -23,6 +24,7 @@
                         :field="{
                             type: 'text'
                         }"
+                        v-model="filter.value"
                         class="search-field"></v-form-el>
                 </div>
             </div>
@@ -161,6 +163,8 @@ export default {
 
     computed: {
         endpoint() {
+            // TODO: Add filters
+            
             return `${this.baseUrl}?page=${this.page}&sort=${this.sort}|${this.sortAsc ? 'asc' : 'desc'}&search=${this.searchQuery}`;
         },
 
@@ -171,6 +175,7 @@ export default {
 
     data() {
         return {
+            initialized: false,
             processing: false,
             tableData: [],
             items: [],
@@ -187,6 +192,10 @@ export default {
         this.parseDefaultSorting();
         this.parseFilters();
         this.fetchData();
+
+        this.$nextTick(() => {
+            this.initialized = true;
+        });
     },
 
     watch: {
@@ -196,6 +205,18 @@ export default {
             this.searchTimeout = setTimeout(() => {
                 this.fetchData();
             }, 250);
+        },
+
+        filterFields: {
+            deep: true,
+
+            handler: function (newVal, oldVal) {
+                if (!this.initialized) {
+                    return;
+                }
+                
+                this.fetchData();
+            }
         }
     },
 
@@ -248,6 +269,7 @@ export default {
                                 textField: name,
                                 collection: name,
                             },
+                        value: null,
                     });
                     
                 } else {
@@ -255,6 +277,7 @@ export default {
                         name: name,
                         label: field.name,
                         type: 'text',
+                        value: null,
                     });
                 }
             }
