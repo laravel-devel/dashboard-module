@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Modules\DevelDashboard\Http\Requests\BulkRequest;
 
 trait Crud
 {
@@ -283,6 +284,7 @@ trait Crud
     /**
      * Delete the specified resource.
      *
+     * @param Request $request
      * @param mixed $id
      * @return Response
      */
@@ -305,6 +307,44 @@ trait Crud
         }
 
         $object->delete();
+
+        return response()->json([]);
+    }
+
+    /**
+     * Delete the multiple resource.s
+     *
+     * @param Request $request
+     * @return Response
+     */
+    public function bulkDestroy(BulkRequest $request)
+    {
+        $ids = $request->get('items');
+
+        if (!count($ids)) {
+            return response()->json([]);
+        }
+
+        foreach ($ids as $id) {
+            if (($can = $this->canBeDeleted($request, $id)) !== true) {
+                return response()->json([
+                    'message' => $can,
+                ], 409);
+            }
+        }
+
+        $model = new $this->modelClass;
+
+        foreach ($ids as $id) {
+            $object = $this->model()::where($model->getRouteKeyName(), $id)->first();
+
+            if (!$object) {
+                continue;
+            }
+
+            // Calling delete on each object separately to trigger Model events
+            $object->delete();
+        }
 
         return response()->json([]);
     }
