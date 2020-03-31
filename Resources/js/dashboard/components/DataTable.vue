@@ -402,7 +402,9 @@ export default {
             if (name === 'create' || name === 'edit') {
                 action.ajax = false;
                 action.noBulk = true;
+            }
 
+            if (name === 'create') {
                 // The create action is saved in its own object
                 this.createAction = action;
 
