@@ -167,6 +167,10 @@ trait Crud
      */
     protected function datatable(): array
     {
+        $model = $this->model();
+
+        $this->datatableFields['_primary_key'] = (new $model)->getRouteKeyName();
+
         return $this->datatableFields;
     }
 
@@ -390,12 +394,12 @@ trait Crud
                     $item->{$name}()->sync(array_filter($value));
 
                     break;
-                // TODO: missing relationships (you can get the locale/foreign
-                // keys via $attrs['relation'] or maybe I can directly set the
-                // relations via Eloquent?)
-                // - HasMany (probably exact same code as for 'BelongsToMany')
-                // - BelongsToOne
-                // - HasOne
+                    // TODO: missing relationships (you can get the locale/foreign
+                    // keys via $attrs['relation'] or maybe I can directly set the
+                    // relations via Eloquent?)
+                    // - HasMany (probably exact same code as for 'BelongsToMany')
+                    // - BelongsToOne
+                    // - HasOne
             }
         }
 

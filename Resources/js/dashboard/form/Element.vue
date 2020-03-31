@@ -97,6 +97,10 @@ export default {
         },
 
         val() {
+            if (this.value) {
+                return this.value;
+            }
+
             if (this.attrs.value) {
                 return this.attrs.value;
             }
@@ -113,8 +117,12 @@ export default {
 
     created() {
         this.attrs = Object.assign({}, this.field, this.field.attrs);
-        this.attrs.label = this.showLabel ? this.field.label : undefined;
-        this.attrs.disabled = (
+
+        this.$set(this.attrs, 'label', this.showLabel ? this.field.label : undefined);
+
+        this.$set(
+            this.attrs,
+            'disabled',
             this.readOnly || ((this.attrs.disabled == true) ? true : false)
         );
 
@@ -130,6 +138,7 @@ export default {
     methods: {
         onInput(input) {
             this.$emit('input', input);
+            this.$emit('change');
         },
 
         // Set the "check" attr of the checkbox-like fields
@@ -138,9 +147,9 @@ export default {
                 return;
             }
 
-            this.attrs.checked = this.attrs.checked === undefined
+            this.$set(this.attrs, 'checked', this.attrs.checked === undefined
                 ? (!! this.val)
-                : this.attrs.checked;
+                : this.attrs.checked);
         },
 
         // Update the "check" attr of the checkbox-like fields
@@ -149,7 +158,7 @@ export default {
                 return;
             }
 
-            this.attrs.checked = this.value;
+            this.$set(this.attrs, 'checked', this.value);
         },
     }
 }

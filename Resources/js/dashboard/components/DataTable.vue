@@ -32,12 +32,16 @@
 
         <div class="flex pb-1">
             <div class="flex flex-align-center flex-1">
-                <div v-if="bulkActionsOn" class="mr-1">
+                <div v-if="bulkActionsOn && hasBulkActions" class="mr-1">
                     <v-form-el :inline="true"
                         :field="{
-                            type: 'select'
+                            type: 'select',
+                            attrs: bulkActionsSelect.attrs,
                         }"
-                        class="bulk-action-select"></v-form-el>
+                        :collections="bulkActionsSelect.collection"
+                        class="bulk-action-select"
+                        v-model="selectedBulkAction"
+                        @change="onBulkActionSelected"></v-form-el>
                 </div>
 
                 <div v-if="searchOn">
@@ -60,14 +64,16 @@
         <div class="table-wrapper">
             <table class="table card">
                 <thead>
-                    <th v-if="bulkActionsOn" class="bulk-actions">
+                    <th v-if="bulkActionsOn && hasBulkActions" class="bulk-actions">
                         <v-form-el :inline="true"
                             :field="{
                                 type: 'checkbox'
-                            }"></v-form-el>
+                            }"
+                            v-model="selectedItemsAll"
+                            @change="onSelectAllToggle"></v-form-el>
                     </th>
 
-                    <th v-for="key in Object.keys(fields)"
+                    <th v-for="key in Object.keys(visibleFields)"
                         :key="key"
                         :class="{ 'sortable': fields[key].sortable }"
                         @click="toggleSort(key)"
@@ -88,35 +94,19 @@
                 
                 <tbody>
                     <tr v-for="(item, index) in items" :key="index">
-                        <td v-if="bulkActionsOn" class="bulk-actions">
+                        <td v-if="bulkActionsOn && hasBulkActions" class="bulk-actions">
                             <v-form-el :inline="true"
                                 :field="{
                                     type: 'checkbox'
-                                }"></v-form-el>
+                                }"
+                                v-model="selectedItems[index]"></v-form-el>
                         </td>
 
-                        <td v-for="key in Object.keys(fields)"
+                        <td v-for="key in Object.keys(visibleFields)"
                             :key="key"
                             v-html="formatted(fields[key], item, key)"></td>
 
                         <td v-if="hasActions" class="actions">
-                            <!-- <a v-if="actions.delete && allowedTo('delete')"
-                                href="#"
-                                class="action-btn danger"
-                                title="Delete"
-                                @click.prevent="deleteItemConfirm(item, actions.delete.url)"
-                            >
-                                <i class="las la-trash"></i>
-                            </a>
-
-                            <a v-if="actions.edit && (allowedTo('edit') || allowedTo('view'))"
-                                :href="actionEndpoint(actions.edit.url, item)"
-                                class="action-btn primary"
-                                title="Edit"
-                            >
-                                <i class="las la-edit"></i>
-                            </a> -->
-
                             <template v-for="(action, index) in allActions.single">
                                 <a v-if="allowedTo(action.name)"
                                     :key="index"
@@ -227,7 +217,11 @@ export default {
 
         hasActions() {
             return this.allActions.single && this.allActions.single.length > 0;
-        }
+        },
+
+        hasBulkActions() {
+            return this.allActions.bulk && this.allActions.bulk.length > 0;
+        },
     },
 
     data() {
@@ -236,11 +230,14 @@ export default {
             processing: false,
             tableData: [],
             items: [],
+            selectedItems: {},
+            selectedItemsAll: false,
             page: 1,
             sort: Object.keys(this.fields)[0],
             sortAsc: true,
             searchQuery: '',
             searchTimeout: null,
+            visibleFields: {},
             filterFields: [],
 
             allActions: {
@@ -248,13 +245,22 @@ export default {
                 bulk: [],
             },
             createAction: null,
+            primaryKey: '',
+
+            bulkActionsSelect: {
+                attrs: {},
+                collection: {},
+            },
+            selectedBulkAction: [],
         };
     },
  
     created() {
+        this.parseFields();
         this.parseDefaultSorting();
         this.parseFilters();
         this.parseActions();
+        this.parseBulkActions();
         this.fetchData();
 
         this.$nextTick(() => {
@@ -281,10 +287,34 @@ export default {
                 
                 this.fetchData();
             }
-        }
-    },
+        },
+
+        selectedItems: {
+            deep: true,
+
+            handler: function () {
+                let selected = Object.keys(this.selectedItems).filter(key => {
+                    return this.selectedItems[key];
+                });
+
+                this.selectedItemsAll = (selected.length === this.items.length);
+            }
+        },
+     },
 
     methods: {
+        parseFields() {
+            for (let key of Object.keys(this.fields)) {
+                if (key === '_primary_key') {
+                    this.primaryKey = this.fields[key];
+
+                    continue;
+                }
+
+                this.visibleFields[key] = this.fields[key];
+            }
+        },
+
         parseDefaultSorting() {
             if (!this.sortBy) {
                 return;
@@ -366,16 +396,12 @@ export default {
             action.title = action.title ? action.title : '';
             action.success = action.success ? action.success : null;
             action.ajax = action.ajax === false ? false : true;
-            action.noBulk = action.noBulk === true ? true : false;
-            action.bulkOnly = action.bulkOnly === true ? true : false;
-            action.bulk = !action.noBulk;
             action.method = action.method ? action.method : 'post';
 
             // Some default action have default settings
             if (name === 'create' || name === 'edit') {
                 action.ajax = false;
                 action.noBulk = true;
-                action.bulk = false;
 
                 // The create action is saved in its own object
                 this.createAction = action;
@@ -390,6 +416,7 @@ export default {
 
             if (name === 'delete') {
                 action.confirm = 'Are you sure you want to delete this item?';
+                action.confirmBulk = 'Are you sure you want to delete the selected items?';
                 action.icon = action.icon ? action.icon : 'la-trash';
                 action.class = 'danger';
                 action.title = action.title ? action.title : 'Delete';
@@ -397,13 +424,35 @@ export default {
             }
 
             // Add action to the single actions collection
-            if (!action.bulkOnly) {
-                this.allActions.single.push(action);
+            if (action.url) {
+                const a = Object.assign({}, action, { bulk: false });
+
+                this.allActions.single.push(a);
             }
 
             // Add action to the bulk actions collection
-            if (!action.noBulk) {
-                this.allActions.bulk.push(action);
+            if (action.bulkUrl) {
+                const b = Object.assign({}, action, { bulk: true });
+
+                this.allActions.bulk.push(b);
+            }
+        },
+
+        parseBulkActions() {
+            this.bulkActionsSelect.attrs = {
+                idField: 'name',
+                textField: 'title',
+                collection: 'bulkActions',
+                placeholder: 'Bulk actions',
+            };
+
+            this.bulkActionsSelect.collection.bulkActions = [];
+
+            for (let action of this.allActions.bulk) {
+                this.bulkActionsSelect.collection.bulkActions.push({
+                    name: action.name,
+                    title: action.title,
+                });
             }
         },
 
@@ -475,7 +524,13 @@ export default {
             return value;
         },
 
-        actionEndpoint(url, item) {
+        actionEndpoint(action, item) {
+            let url = action.bulk ? action.bulkUrl : action.url;
+
+            if (action.bulk) {
+                return url;
+            }
+
             const params = url.match(new RegExp(':([a-zA-Z].*?)(/|$)', 'g'));
 
             for (let param of params) {
@@ -490,28 +545,6 @@ export default {
             return url;
         },
 
-        deleteItem(item, url) {
-            this.processing = true;
-
-            url = this.actionEndpoint(url, item);
-
-            axios.delete(url)
-                .then((response) => {
-                    this.fetchData();
-
-                    this.$notify('Item has been deleted!', 'success');
-                })
-                .catch(({ response }) => {
-                    let error = response.data.message
-                        ? response.data.message
-                        : 'Something went wrong!';
-
-                    this.$notify(error, 'error');
-
-                    this.processing = false;
-                });
-        },
-
         allowedTo(action) {
             // If a permissions for an action weren't specified - it is allowed
             if (!this.permissions[action]) {
@@ -522,8 +555,12 @@ export default {
         },
 
         confirmAction(action, item) {
-            if (typeof action.confirm === 'string' && action.confirm.length > 0) {
-                this.$confirm(action.confirm, {
+            const confirmation = action.bulk
+                ? (action.confirmBulk ? action.confirmBulk : action.confirm)
+                : action.confirm;
+
+            if (confirmation) {
+                this.$confirm(confirmation, {
                     onOk: () => {
                         this.doAction(action, item);
                     }
@@ -533,8 +570,8 @@ export default {
             }
         },
 
-        doAction(action, item) {
-            const url = this.actionEndpoint(action.url, item);
+        doAction(action, item = null) {
+            const url = this.actionEndpoint(action, item);
 
             // A non-AJAX action - just go to the URL
             if (!action.ajax) {
@@ -543,8 +580,32 @@ export default {
                 return;
             }
 
+            let data = null;
+
+            if (action.bulk) {
+                const selected = Object.keys(this.selectedItems).filter(index => {
+                    return this.selectedItems[index];
+                }).map(key => parseInt(key));
+
+                if (!selected.length) {
+                    return;
+                }
+
+                // Populate data
+                for (let i of selected) {
+                    const item = this.items[i];
+
+                    selected[i] = item[this.primaryKey];
+                }
+                
+                data = { items: selected };
+
+                // Unselect all the items
+                this.selectedItems = Object.assign({});
+            }
+
             // An AJAX action
-            axios[action.method](url)
+            axios[action.method](url, data)
                 .then((response) => {
                     this.fetchData();
 
@@ -563,7 +624,32 @@ export default {
 
                     this.processing = false;
                 });
-        }
+        },
+
+        onSelectAllToggle() {
+            for (let i = 0; i < this.items.length; i++) {
+                this.$set(this.selectedItems, i, this.selectedItemsAll);
+            }
+        },
+
+        onBulkActionSelected() {
+            if (!this.selectedBulkAction.length) {
+                return;
+            }
+
+            const key = this.selectedBulkAction[0];
+            const action = this.allActions.bulk.find(item => item.name === key);
+
+            if (!action) {
+                console.error(`Bulk action '${key}' doesn't exist`);
+
+                return;
+            }
+
+            this.confirmAction(action);
+
+            this.selectedBulkAction = [];
+        },
     }
 }
 </script>

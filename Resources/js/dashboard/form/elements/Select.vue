@@ -134,6 +134,7 @@ export default {
             this.selectedOptions.push(this.formatOption(this.options[0]))
         }
 
+        this.onSelectionsUpdated();
         this.calculateAvailableOptions();
         this.filterOptions();
     },
@@ -153,13 +154,13 @@ export default {
     },
 
     watch: {
-        selectedOptions() {
-            this.onSelectionsUpdated();
-        },
-
         search(newValue) {
             this.filterOptions();
         },
+
+        value(newValue) {
+            this.onValueUpdated(newValue);
+        }
     },
 
     methods: {
@@ -201,14 +202,16 @@ export default {
         },
 
         selectOption(option) {
-            if (this.multipleChoice) {
-                this.selectedOptions.push(this.formatOption(option));
-            } else {
-                this.selectedOptions = [this.formatOption(option)];
+            if (!this.multipleChoice) {
+                this.selectedOptions.splice(0);
             }
+
+            this.selectedOptions.push(this.formatOption(option));
 
             this.search = '';
             this.open = false;
+
+            this.onSelectionsUpdated();
         },
 
         unselectOption(option = null) {
@@ -227,6 +230,8 @@ export default {
             if (index >= 0) {
                 this.selectedOptions.splice(index, 1);
             }
+
+            this.onSelectionsUpdated();
         },
 
         onSelectionsUpdated() {
@@ -237,6 +242,20 @@ export default {
             this.selections = this.selectedOptions.map(item => item[this.idField]);
 
             this.$emit('input', this.selections);
+        },
+
+        onValueUpdated(newValue) {
+            this.selections = newValue;
+
+            this.selectedOptions.splice(0);
+
+            for (let option of this.selections) {
+                const item = this.options.find(item => item[this.idField] === option);
+
+                if (item) {
+                    this.selectedOptions.push(item);
+                }
+            }
         }
     }
 }
