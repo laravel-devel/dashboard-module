@@ -76,8 +76,22 @@
         width: 13rem;
     }
 
+    .bulk-action-select {
+        min-width: 4rem;
+    }
+
     .table {
         table-layout: fixed;
+    }
+
+    th.bulk-actions, td.bulk-actions {
+        text-align: center;
+        width: 2.25rem;
+
+        .form-group .checkbox {
+            margin: 0;
+            padding-left: 1.25rem;
+        }
     }
 
     td {

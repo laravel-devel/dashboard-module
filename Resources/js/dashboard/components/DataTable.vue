@@ -31,27 +31,42 @@
         </div>
 
         <div class="flex pb-1">
-            <div v-if="searchOn" class="flex flex-align-center flex-1">
-                <span class="mr-1">Search:</span>
+            <div class="flex flex-align-center flex-1">
+                <div v-if="bulkActionsOn" class="mr-1">
+                    <v-form-el :inline="true"
+                        :field="{
+                            type: 'select'
+                        }"
+                        class="bulk-action-select"></v-form-el>
+                </div>
 
-                <v-form-el :inline="true"
-                    :field="{
-                        type: 'text'
-                    }"
-                    v-model="searchQuery"
-                    class="search-field"></v-form-el>
+                <div v-if="searchOn">
+                    <span class="mr-1">Search:</span>
+
+                    <v-form-el :inline="true"
+                        :field="{
+                            type: 'text'
+                        }"
+                        v-model="searchQuery"
+                        class="search-field"></v-form-el>
+                </div>
             </div>
 
-            <div v-else class="flex flex-align-center flex-1"></div>
-
-            <div v-if="hasActions && actions.create && allowedTo('create')">
-                <a :href="actions.create.url" class="btn">Add</a>
+            <div v-if="hasActions && createAction && allowedTo('create')">
+                <a :href="createAction.url" class="btn">Add</a>
             </div>
         </div>
 
         <div class="table-wrapper">
             <table class="table card">
                 <thead>
+                    <th v-if="bulkActionsOn" class="bulk-actions">
+                        <v-form-el :inline="true"
+                            :field="{
+                                type: 'checkbox'
+                            }"></v-form-el>
+                    </th>
+
                     <th v-for="key in Object.keys(fields)"
                         :key="key"
                         :class="{ 'sortable': fields[key].sortable }"
@@ -73,12 +88,19 @@
                 
                 <tbody>
                     <tr v-for="(item, index) in items" :key="index">
+                        <td v-if="bulkActionsOn" class="bulk-actions">
+                            <v-form-el :inline="true"
+                                :field="{
+                                    type: 'checkbox'
+                                }"></v-form-el>
+                        </td>
+
                         <td v-for="key in Object.keys(fields)"
                             :key="key"
                             v-html="formatted(fields[key], item, key)"></td>
 
                         <td v-if="hasActions" class="actions">
-                            <a v-if="actions.delete && allowedTo('delete')"
+                            <!-- <a v-if="actions.delete && allowedTo('delete')"
                                 href="#"
                                 class="action-btn danger"
                                 title="Delete"
@@ -93,15 +115,15 @@
                                 title="Edit"
                             >
                                 <i class="las la-edit"></i>
-                            </a>
+                            </a> -->
 
-                            <template v-for="(action, index) in customActions">
+                            <template v-for="(action, index) in allActions.single">
                                 <a v-if="allowedTo(action.name)"
                                     :key="index"
                                     href="#"
                                     :class="`action-btn ${action.class ? action.class : 'primary'}`"
                                     :title="action.title ? action.title : ''"
-                                    @click.prevent="doCustomAction(action, item)"
+                                    @click.prevent="confirmAction(action, item)"
                                 >
                                     <i v-if="action.icon"
                                         :class="`las ${action.icon}`"></i>
@@ -172,9 +194,10 @@ export default {
             default: true,
         },
 
-        deleteConfirmation: {
-            type: String,
-            default: 'Are you sure you want to delete this item?',
+        // Whether the bulk actions should be enabled
+        bulkActionsOn: {
+            type: Boolean,
+            default: true,
         },
     },
 
@@ -203,7 +226,7 @@ export default {
         },
 
         hasActions() {
-            return this.actions && Object.keys(this.actions).length > 0;
+            return this.allActions.single && this.allActions.single.length > 0;
         }
     },
 
@@ -220,19 +243,18 @@ export default {
             searchTimeout: null,
             filterFields: [],
 
-            defaultActions: [
-                'create',
-                'edit',
-                'delete',
-            ],
-            customActions: [],
+            allActions: {
+                single: [],
+                bulk: [],
+            },
+            createAction: null,
         };
     },
  
     created() {
         this.parseDefaultSorting();
         this.parseFilters();
-        this.parseCustomActions();
+        this.parseActions();
         this.fetchData();
 
         this.$nextTick(() => {
@@ -329,15 +351,59 @@ export default {
             }
         },
 
-        parseCustomActions() {
+        parseActions() {
             for (let name of Object.keys(this.actions)) {
-                if (this.defaultActions.indexOf(name) > -1) {
-                    continue;
-                }
+                this.parseAction(name, this.actions[name]);
+            }
+        },
 
-                this.customActions.push(Object.assign(this.actions[name], {
-                    name: name,
-                }));
+        parseAction(name, action) {
+            // Calculate action properties
+            action.name = name;
+            action.confirm = action.confirm ? action.confirm : false;
+            action.icon = action.icon ? action.icon : null;
+            action.class = action.class ? action.class : 'primary';
+            action.title = action.title ? action.title : '';
+            action.success = action.success ? action.success : null;
+            action.ajax = action.ajax === false ? false : true;
+            action.noBulk = action.noBulk === true ? true : false;
+            action.bulkOnly = action.bulkOnly === true ? true : false;
+            action.bulk = !action.noBulk;
+            action.method = action.method ? action.method : 'post';
+
+            // Some default action have default settings
+            if (name === 'create' || name === 'edit') {
+                action.ajax = false;
+                action.noBulk = true;
+                action.bulk = false;
+
+                // The create action is saved in its own object
+                this.createAction = action;
+
+                return;
+            }
+
+            if (name === 'edit') {
+                action.icon = action.icon ? action.icon : 'la-edit';
+                action.title = action.title ? action.title : 'Edit';
+            }
+
+            if (name === 'delete') {
+                action.confirm = 'Are you sure you want to delete this item?';
+                action.icon = action.icon ? action.icon : 'la-trash';
+                action.class = 'danger';
+                action.title = action.title ? action.title : 'Delete';
+                action.method = 'delete';
+            }
+
+            // Add action to the single actions collection
+            if (!action.bulkOnly) {
+                this.allActions.single.push(action);
+            }
+
+            // Add action to the bulk actions collection
+            if (!action.noBulk) {
+                this.allActions.bulk.push(action);
             }
         },
 
@@ -424,14 +490,6 @@ export default {
             return url;
         },
 
-        deleteItemConfirm(item, url) {
-            this.$confirm(this.deleteConfirmation, {
-                onOk: () => {
-                    this.deleteItem(item, url);
-                }
-            });
-        },
-
         deleteItem(item, url) {
             this.processing = true;
 
@@ -463,11 +521,30 @@ export default {
             return $auth.hasPermissions(this.permissions[action]);
         },
 
-        doCustomAction(action, item) {
-            const endpoint = this.actionEndpoint(action.url, item);
-            const method = action.method ? action.method : 'post';
+        confirmAction(action, item) {
+            if (typeof action.confirm === 'string' && action.confirm.length > 0) {
+                this.$confirm(action.confirm, {
+                    onOk: () => {
+                        this.doAction(action, item);
+                    }
+                });
+            } else {
+                this.doAction(action, item);
+            }
+        },
 
-            axios[method](endpoint)
+        doAction(action, item) {
+            const url = this.actionEndpoint(action.url, item);
+
+            // A non-AJAX action - just go to the URL
+            if (!action.ajax) {
+                window.location = url;
+
+                return;
+            }
+
+            // An AJAX action
+            axios[action.method](url)
                 .then((response) => {
                     this.fetchData();
 
