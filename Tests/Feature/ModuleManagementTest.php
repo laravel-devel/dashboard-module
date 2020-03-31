@@ -30,7 +30,7 @@ class ModuleManagementTest extends TestCase
     public function admins_can_view_all_the_available_modules()
     {
         // The page should display all the modules except 'DevelDashboard'
-        $expected = array_values(array_filter(array_keys(Module::getAllOrdered()), function ($key) {
+        $expected = array_values(array_filter(array_keys(Module::getInstalledOrdered()), function ($key) {
             return (!in_array($key, ['DevelDashboard']));
         }));
 
