@@ -218,6 +218,8 @@ export default {
             if (!this.multipleChoice) {
                 this.selectedOptions = [];
 
+                this.onSelectionsUpdated();
+
                 return;
             }
 
