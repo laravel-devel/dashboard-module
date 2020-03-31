@@ -434,6 +434,11 @@ export default {
             // Add action to the bulk actions collection
             if (action.bulkUrl) {
                 const b = Object.assign({}, action, { bulk: true });
+                
+                // Bulk deletes are done via POST
+                if (name === 'delete') {
+                    b.method = 'post';
+                }
 
                 this.allActions.bulk.push(b);
             }
@@ -584,19 +589,21 @@ export default {
             let data = null;
 
             if (action.bulk) {
-                const selected = Object.keys(this.selectedItems).filter(index => {
+                const indexes = Object.keys(this.selectedItems).filter(index => {
                     return this.selectedItems[index];
                 }).map(key => parseInt(key));
 
-                if (!selected.length) {
+                if (!indexes.length) {
                     return;
                 }
 
+                const selected = [];
+
                 // Populate data
-                for (let i of selected) {
+                for (let i of indexes) {
                     const item = this.items[i];
 
-                    selected[i] = item[this.primaryKey];
+                    selected.push(item[this.primaryKey]);
                 }
                 
                 data = { items: selected };
