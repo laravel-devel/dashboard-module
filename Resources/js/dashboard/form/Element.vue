@@ -97,10 +97,6 @@ export default {
         },
 
         val() {
-            if (this.value) {
-                return this.value;
-            }
-
             if (this.attrs.value) {
                 return this.attrs.value;
             }
@@ -130,7 +126,9 @@ export default {
     },
 
     watch: {
-        value() {
+        value(newVal) {
+            this.$set(this.attrs, 'value', newVal);
+
             this.updateChecked();
         }
     },
