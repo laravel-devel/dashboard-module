@@ -2,6 +2,7 @@
 
 namespace Modules\DevelDashboard\Traits;
 
+use Doctrine\DBAL\DBALException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -324,7 +325,7 @@ trait Crud
         if (!count($ids)) {
             return response()->json([]);
         }
-
+        
         foreach ($ids as $id) {
             if (($can = $this->canBeDeleted($request, $id)) !== true) {
                 return response()->json([
@@ -395,8 +396,23 @@ trait Crud
         $columns = Schema::getColumnListing($table);
 
         foreach ($columns as $field) {
-            $columnType = DB::getSchemaBuilder()
-                ->getColumnType($table, $field);
+            // TODO: Exctract to a service
+            // TODO: This block of code repeats in 3 classes. Extract to a
+            // service, something like SchemaService or DbService
+            try {
+                $columnType = DB::getSchemaBuilder()
+                    ->getColumnType($table, $field);
+            } catch (SchemaException $e) {
+                throw new \Exception($e->getMessage() . ' Did you run the migrations?');
+            } catch (DBALException $e) {
+                // Some column types like "enum" through a DBALException.
+                // This is because "enum" is a custom type and is not supported
+                // by all the DBs. We're going to default to the string type in
+                // these cases.
+                $columnType = 'string';
+            } catch (\Exception $e) {
+                throw $e;
+            }
 
             if ($columnType === 'boolean') {
                 $values[$field] = $request->has($field);
@@ -434,12 +450,12 @@ trait Crud
                     $item->{$name}()->sync(array_filter($value));
 
                     break;
-                    // TODO: missing relationships (you can get the locale/foreign
-                    // keys via $attrs['relation'] or maybe I can directly set the
-                    // relations via Eloquent?)
-                    // - HasMany (probably exact same code as for 'BelongsToMany')
-                    // - BelongsToOne
-                    // - HasOne
+                // TODO: missing relationships (you can get the locale/foreign
+                // keys via $attrs['relation'] or maybe I can directly set the
+                // relations via Eloquent?)
+                // - HasMany (probably exact same code as for 'BelongsToMany')
+                // - BelongsToOne
+                // - HasOne
             }
         }
 
