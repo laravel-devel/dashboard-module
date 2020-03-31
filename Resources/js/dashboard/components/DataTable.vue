@@ -369,7 +369,6 @@ export default {
                             ? [options[0][idField]]
                             : null,
                     });
-                    
                 } else {
                     this.filterFields.push({
                         name: name,

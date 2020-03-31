@@ -14,8 +14,16 @@ export default class {
         }
 
         for (let permission of permissions) {
-            if (!this.hasPermission(permission)) {
-                return false;
+            if (permission.indexOf('||') > -1 || permission.indexOf('&&') > -1) {
+                // A conditional/comples permission
+                if (!this.hasConditionalPermissions(permission)) {
+                    return false;
+                }
+            } else {
+                // Simple permission
+                if (!this.hasPermission(permission)) {
+                    return false;
+                }
             }
         }
 
@@ -30,8 +38,26 @@ export default class {
         return this.hasPersonalPermission(permission) || this.hasPermissionViaRole(permission);
     }
 
+    hasConditionalPermissions(condition = '') {
+        if (!condition) {
+            return false;
+        }
+
+        const matches = condition.match(/[a-z\._]*/g);
+
+        const permissions = matches.filter(item => item.length);
+
+        for (let key of permissions) {
+            const permitted = this.hasPermission(key) ? 'true' : 'false';
+
+            condition = condition.replace(key, permitted);
+        }
+
+        return eval(condition);
+    }
+
     hasPersonalPermission(permission = '') {
-        return !! this.user.permissions.find(item => item.key === permission);
+        return !!this.user.permissions.find(item => item.key === permission);
     }
 
     hasPermissionViaRole(permission = '') {
