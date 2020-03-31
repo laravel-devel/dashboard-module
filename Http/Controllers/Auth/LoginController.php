@@ -41,7 +41,7 @@ class LoginController extends Controller
     {
         $this->validateLogin($request);
 
-        $credentials = $request->only('email', 'password');
+        $credentials = $request->only($this->username(), 'password');
 
         if (Auth::attempt($credentials, $request->has('remember'))) {
             if (auth()->user()->hasPermissions('admin_dashboard.access')) {
@@ -77,7 +77,7 @@ class LoginController extends Controller
     protected function validateLogin(Request $request)
     {
         $request->validate([
-            'email' => 'required|string',
+            $this->username() => 'required|string',
             'password' => 'required|string',
         ]);
     }
@@ -107,6 +107,16 @@ class LoginController extends Controller
             'message' => 'Invalid credentials.',
             'errors' => [],
         ], 422);
+    }
+
+    /**
+     * Get the login field.
+     *
+     * @return string
+     */
+    public function username(): string
+    {
+        return 'email';
     }
 
     /**

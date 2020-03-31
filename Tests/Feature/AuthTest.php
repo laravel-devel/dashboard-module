@@ -35,8 +35,11 @@ class AuthTest extends TestCase
     {
         $this->assertGuest();
 
+        $controller = config('develdashboard.auth_controllers_namespace') . '\\LoginController';
+        $controller = new $controller;
+
         $this->postJson(route('dashboard.auth.login.post', [
-            'email' => $this->admin->email,
+            $controller->username() => $this->admin->{$controller->username()},
             'password' => $this->password,
         ]))->assertStatus(200);
 
