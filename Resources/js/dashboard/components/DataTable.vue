@@ -540,12 +540,14 @@ export default {
 
             const params = url.match(new RegExp(':([a-zA-Z].*?)(/|$)', 'g'));
 
-            for (let param of params) {
-                param = param.replace('/', '');
-                const attr = param.replace(':', '');
+            if (params) {
+                for (let param of params) {
+                    param = param.replace('/', '');
+                    const attr = param.replace(':', '');
 
-                if (item[attr]) {
-                    url = url.replace(param, item[attr]);
+                    if (item[attr]) {
+                        url = url.replace(param, item[attr]);
+                    }
                 }
             }
 
