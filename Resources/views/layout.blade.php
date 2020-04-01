@@ -14,6 +14,7 @@
 <body>
     <div id="vue" class="container">
         <v-alert></v-alert>
+        <v-modal></v-modal>
 
         <v-notification :flash="[
             @if (session('info'))

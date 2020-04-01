@@ -21,3 +21,7 @@ Vue.prototype.$notify = function (message = '', type = 'info') {
 
     Events.$emit('notify', { message: message, type: type });
 }
+
+Vue.prototype.$modal = function (id = null, options = {}) {
+    Events.$emit('modal', { id: id, options: options });
+}
