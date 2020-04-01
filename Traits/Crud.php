@@ -157,7 +157,7 @@ trait Crud
      *
      * @return string
      */
-    protected function model(): string
+    public function model(): string
     {
         return $this->modelClass;
     }
@@ -167,7 +167,7 @@ trait Crud
      *
      * @return array
      */
-    protected function datatable(): array
+    public function datatable(): array
     {
         $model = $this->model();
 
@@ -181,7 +181,7 @@ trait Crud
      *
      * @return array
      */
-    protected function actions(): array
+    public function actions(): array
     {
         return $this->datatableActions;
     }
@@ -191,7 +191,7 @@ trait Crud
      *
      * @return array
      */
-    protected function filters(): array
+    public function filters(): array
     {
         return $this->datatableFilters;
     }
@@ -201,7 +201,7 @@ trait Crud
      *
      * @return array
      */
-    protected function permissions(): array
+    public function permissions(): array
     {
         return $this->datatablePermissions;
     }
@@ -211,7 +211,7 @@ trait Crud
      *
      * @return array
      */
-    protected function form(): array
+    public function form(): array
     {
         return $this->formFields;
     }
