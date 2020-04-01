@@ -29,7 +29,3 @@ Vue.component('v-notification', require('./dashboard/components/Notification').d
 
 // Pages
 Vue.component('v-pages-modules', require('./dashboard/pages/Modules').default);
-
-new Vue({
-    el: '#vue',
-});
