@@ -9,6 +9,7 @@
 
     <link rel="stylesheet" href="{{ mix('css/devel/dashboard.css') }}">
     <link rel="stylesheet" href="{{ asset('css/devel/line-awesome.min.css') }}">
+    @stack('styles')
 </head>
 <body>
     <div id="vue" class="container">
@@ -39,5 +40,6 @@
         window.$user = {!! auth()->user() !!};
     </script>
     <script src="{{ mix('js/devel/dashboard.js') }}"></script>
+    @stack('scripts')
 </body>
 </html>

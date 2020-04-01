@@ -8,6 +8,7 @@
     @include('devel::seo._metatags')
 
     <link rel="stylesheet" href="{{ mix('css/devel/dashboard.css') }}">
+    @stack('styles')
 </head>
 <body>
     <div id="vue" class="container">
@@ -19,5 +20,6 @@
     </div>
 
     <script src="{{ mix('js/devel/dashboard.js') }}"></script>
+    @stack('scripts')
 </body>
 </html>
