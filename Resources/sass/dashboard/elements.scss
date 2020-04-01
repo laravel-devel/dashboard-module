@@ -146,6 +146,11 @@
         display: inline-block;
         color: $primary;
 
+        i {
+            font-size: 1.1rem;
+            padding: .25rem;
+        }
+
         &:hover { color: $primaryHover; }
 
         &.danger {

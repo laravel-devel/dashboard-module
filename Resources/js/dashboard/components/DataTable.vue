@@ -396,6 +396,7 @@ export default {
             action.success = action.success ? action.success : null;
             action.ajax = action.ajax === false ? false : true;
             action.method = action.method ? action.method : 'post';
+            action.customHandler = action.customHandler === true ? true : false;
 
             // Some default action have default settings
             if (name === 'create' || name === 'edit') {
@@ -612,6 +613,13 @@ export default {
                 this.selectedItems = Object.assign({});
             }
 
+            // A custom action - just fire an event
+            if (action.customHandler) {
+                return this.doCustomAction(
+                    action, url, action.bulk ? data.items : item
+                );
+            }
+
             // An AJAX action
             axios[action.method](url, data)
                 .then((response) => {
@@ -632,6 +640,17 @@ export default {
 
                     this.processing = false;
                 });
+        },
+
+        doCustomAction(action, url, items = null) {
+            // A URL with inserted parameters
+            action.url = url;
+
+            this.$emit('action', {
+                action: action,
+                url: url,
+                items: items,
+            });
         },
 
         onSelectAllToggle() {
