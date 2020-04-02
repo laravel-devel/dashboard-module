@@ -9,21 +9,12 @@
                 <div v-for="(filter, index) in this.filterFields" :key="index" class="mr-05 ml-05 mb-1">
                     <div class="mb-05 text-semibold">{{ filter.label }}:</div>
 
-                    <v-form-el v-if="filter.type === 'select'"
-                        :inline="true"
+                    <v-form-el :inline="true"
                         :field="{
-                            type: 'select',
+                            type: filter.type,
                             attrs: filter.attrs,
                         }"
                         :collections="{ [filter.name]: filter.options }"
-                        v-model="filter.value"
-                        class="search-field"></v-form-el>
-
-                    <v-form-el v-else
-                        :inline="true"
-                        :field="{
-                            type: 'text'
-                        }"
                         v-model="filter.value"
                         class="search-field"></v-form-el>
                 </div>
@@ -261,9 +252,9 @@ export default {
         this.parseFilters();
         this.parseActions();
         this.parseBulkActions();
-        this.fetchData();
 
         this.$nextTick(() => {
+            this.fetchData();
             this.initialized = true;
         });
     },
@@ -373,7 +364,8 @@ export default {
                     this.filterFields.push({
                         name: name,
                         label: field.name,
-                        type: 'text',
+                        type: field.type ? field.type : 'text',
+                        attrs: field.attrs ? field.attrs : {},
                         value: null,
                     });
                 }
@@ -667,7 +659,7 @@ export default {
             const action = this.allActions.bulk.find(item => item.name === key);
 
             if (!action) {
-                console.error(`Bulk action '${key}' doesn't exist`);
+                console.error(`Bulk action '${key}' doesn't exist.`);
 
                 return;
             }

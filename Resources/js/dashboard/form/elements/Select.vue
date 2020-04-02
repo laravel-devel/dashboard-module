@@ -79,7 +79,7 @@
             type="hidden"
             :name="`${attrs.name}[]`"
             autocomplete="off"
-            value=''
+            value=""
             v-model="selections">
     </div>
 </template>

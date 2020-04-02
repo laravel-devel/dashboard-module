@@ -24,6 +24,12 @@
             :collections="collections"
             @input="onInput"></v-fel-select>
 
+        <v-fel-daterange v-else-if="field.type === 'daterange'"
+            :attrs="attrs"
+            :value="val"
+            :collections="collections"
+            @input="onInput"></v-fel-daterange>
+
         <div v-if="errors" class="hint danger">
             {{ errors[0] }}
         </div>
@@ -36,6 +42,7 @@ import Checkbox from './elements/Checkbox';
 import Switch from './elements/Switch';
 import Link from './elements/Link';
 import Select from './elements/Select';
+import DateRange from './elements/DateRange';
 
 export default {
     components: {
@@ -44,6 +51,7 @@ export default {
         'v-fel-switch': Switch,
         'v-fel-link': Link,
         'v-fel-select': Select,
+        'v-fel-daterange': DateRange,
     },
 
     props: {
