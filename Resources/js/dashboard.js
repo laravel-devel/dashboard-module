@@ -4,6 +4,8 @@
 window.axios = require('axios');
 window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
+window.moment = require('moment');
+
 /**
  * Auth module
  */
@@ -17,6 +19,16 @@ window.Vue = require('vue');
 window.Events = new Vue();
 require('./dashboard/functions');
 
+// Element UI
+import ElementUI from 'element-ui';
+import locale from 'element-ui/lib/locale/lang/en'
+import 'element-ui/lib/theme-chalk/index.css';
+
+Vue.use(ElementUI, { locale });
+
+/**
+ * Devel components
+ */
 // Form
 Vue.component('v-form', require('./dashboard/form/Form').default);
 Vue.component('v-form-tab', require('./dashboard/form/FormTab').default);
