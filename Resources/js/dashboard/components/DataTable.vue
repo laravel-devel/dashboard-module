@@ -645,9 +645,6 @@ export default {
         },
 
         doCustomAction(action, url, items = null) {
-            // A URL with inserted parameters
-            action.url = url;
-
             this.$emit('action', {
                 action: action,
                 url: url,
