@@ -47,8 +47,12 @@
                 </div>
             </div>
 
-            <div v-if="hasActions && createAction && allowedTo('create')">
-                <a :href="createAction.url" class="btn">Add</a>
+            <div class="flex flex-align-center">
+                <slot name="top-panel"></slot>
+
+                <a v-if="hasActions && createAction && allowedTo('create')"
+                    :href="createAction.url"
+                    class="btn">Add</a>
             </div>
         </div>
 
