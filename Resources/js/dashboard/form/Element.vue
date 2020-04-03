@@ -30,6 +30,11 @@
             :collections="collections"
             @input="onInput"></v-fel-daterange>
 
+        <v-fel-file v-else-if="field.type === 'file'"
+            :attrs="attrs"
+            :value="val"
+            @input="onInput"></v-fel-file>
+
         <div v-if="errors" class="hint danger">
             {{ errors[0] }}
         </div>
@@ -43,6 +48,7 @@ import Switch from './elements/Switch';
 import Link from './elements/Link';
 import Select from './elements/Select';
 import DateRange from './elements/DateRange';
+import File from './elements/File';
 
 export default {
     components: {
@@ -52,6 +58,7 @@ export default {
         'v-fel-link': Link,
         'v-fel-select': Select,
         'v-fel-daterange': DateRange,
+        'v-fel-file': File,
     },
 
     props: {
@@ -144,7 +151,7 @@ export default {
     methods: {
         onInput(input) {
             this.$emit('input', input);
-            this.$emit('change');
+            this.$emit('change', input);
         },
 
         // Set the "check" attr of the checkbox-like fields
