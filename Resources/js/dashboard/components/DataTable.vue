@@ -565,11 +565,10 @@ export default {
                 : action.confirm;
 
             if (confirmation) {
-                this.$confirm(confirmation, {
-                    onOk: () => {
+                this.$confirm(confirmation, 'Confirmation', {})
+                    .then(() => {
                         this.doAction(action, item);
-                    }
-                });
+                    });
             } else {
                 this.doAction(action, item);
             }
@@ -627,14 +626,22 @@ export default {
                         ? action.success
                         : 'Action has been performed successfully!';
 
-                    this.$notify(msg, 'success');
+                    this.$notify({
+                        title: 'Action complete',
+                        message: msg,
+                        type: 'success' 
+                    });
                 })
                 .catch(({ response }) => {
                     let error = response.data.message
                         ? response.data.message
                         : 'Something went wrong!';
 
-                    this.$notify(error, 'error');
+                    this.$notify({
+                        title: 'Action error',
+                        message: error,
+                        type: 'error' 
+                    });
 
                     this.processing = false;
                 });

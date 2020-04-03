@@ -81,7 +81,11 @@ export default {
                     let msg = enabled ? 'Enabled ' : 'Disabled ';
                     msg += `module "${moduleName}"`;
 
-                    this.$notify(msg, enabled ? 'success' : 'info');
+                    this.$notify({
+                        title: 'Done',
+                        message: msg,
+                        type: enabled ? 'success' : 'info'
+                    });
 
                     this.changesMade = true;
 
@@ -96,7 +100,11 @@ export default {
                         msg = `Something went wrong! Module "${moduleName}" has not been ` + (enabled ? 'disabled.' : 'enabled.');
                     }
 
-                    this.$notify(msg, 'error');
+                    this.$notify({
+                        title: 'Error',
+                        message: msg,
+                        type: 'error'
+                    });
 
                     this.$set(this.values, key, !enabled);
 

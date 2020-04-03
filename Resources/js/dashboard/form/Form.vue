@@ -154,10 +154,10 @@ export default {
                 this.messageClass = 'success';
 
                 if (data.notification) {
-                    this.$notify(
-                        data.notification.message,
-                        data.notification.type ? data.notification.type : null
-                    );
+                    this.$notify({
+                        message: data.notification.message,
+                        type: data.notification.type ? data.notification.type : 'info'
+                    });
                 }
 
                 if (this.success) {
@@ -181,7 +181,11 @@ export default {
                         : 'Something went wrong!';
                 }
 
-                this.$notify(this.message, 'error');
+                this.$notify({
+                    title: 'Oops...',
+                    message: this.message,
+                    type: 'error'
+                });
 
                 this.processing = false;
             });
