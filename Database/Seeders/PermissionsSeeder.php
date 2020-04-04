@@ -28,8 +28,16 @@ class PermissionsSeeder extends Seeder
             ]);
         }
 
-        Role::find('root')->permissions()->attach($permission);
-        Role::find('admin')->permissions()->attach($permission);
+        $root = Role::find('root');
+        $admin = Role::find('admin');
+
+        if ($root && !$root->permissions->contains($permission)) {
+            Role::find('root')->permissions()->attach($permission);
+        }
+
+        if ($admin && !$admin->permissions->contains($permission)) {
+            Role::find('admin')->permissions()->attach($permission);
+        }
     }
 
     /**
