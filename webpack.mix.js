@@ -9,7 +9,11 @@ mix.sass(__dirname + '/Resources/sass/dashboard.scss', 'css/devel/dashboard.css'
 
 // Compile the main dashboard js files and all the dashboard extension files
 // from all the modules
-let modules = Object.keys(require('../modules.json'));
+let modules = [];
+
+if (File.exists('../modules.json')) {
+    modules = Object.keys(require('../modules.json'))
+}
 
 let compiled = [
     'js/devel/dashboard/develdashboard.js',
