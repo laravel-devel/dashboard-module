@@ -28,6 +28,14 @@ class BaseSettingsController extends Controller
             $groupName = ucwords(str_replace('_', ' ', $group));
             $form[$groupName] = [];
 
+            // Fetch the whole group of settings
+            if ($keys === true) {
+                $keys = Settings::where('group', $group)
+                    ->get()
+                    ->pluck('key')
+                    ->toArray();
+            }
+
             foreach ($keys as $key) {
                 $key = "{$group}-{$key}";
                 $setting = Settings::getObject($key);

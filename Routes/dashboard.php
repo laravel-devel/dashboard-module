@@ -22,14 +22,14 @@ Route::get('/', [
  */
 Route::get('/settings', [
     'as' => 'settings.edit',
-    'uses' => 'SettingsController@edit',
+    'uses' => config('develdashboard.site_settings_controller') . '@edit',
     'dashboardSidebar' => 'Site->Settings',
     'permissions' => 'site.edit_settings',
 ]);
 
 Route::post('/settings', [
     'as' => 'settings.update',
-    'uses' => 'SettingsController@update',
+    'uses' => config('develdashboard.site_settings_controller') . '@update',
     'permissions' => 'site.edit_settings',
 ]);
 

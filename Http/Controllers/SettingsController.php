@@ -7,8 +7,6 @@ use Modules\DevelDashboard\Http\Controllers\BaseSettingsController;
 class SettingsController extends BaseSettingsController
 {
     protected $groups = [
-        'site' => [
-            'name',
-        ],
+        'site' => true,
     ];
 }
