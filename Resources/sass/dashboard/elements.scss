@@ -95,12 +95,9 @@
     }
 
     td {
-        // TODO: The actions column should have auto width, other columns should all have the same width
-        // width: auto;
-
-        // &.actions {
-        //     width: 1rem !important;
-        // }
+        &.actions {
+            white-space: nowrap;
+        }
     }
 }
 
