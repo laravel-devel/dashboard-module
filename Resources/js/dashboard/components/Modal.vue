@@ -17,16 +17,26 @@ export default {
     },
  
     created() {
-        Events.$on('modal', (options) => {
-            if (options.id === this.mId) {
-                this.show();
-            } else if (!this.mId && !options.id) {
-                this.show();
-            }
-        });
+        this.registerEventListeners();
     },
 
     methods: {
+        registerEventListeners() {
+            Events.$on('show-modal', (options) => {
+                if (options.id === this.mId) {
+                    this.show();
+                } else if (!this.mId && !options.id) {
+                    this.show();
+                }
+            });
+
+            Events.$on('hide-modal', (options) => {
+                if (this.mId && options.id === this.mId) {
+                    this.hide();
+                }
+            });
+        },
+
         show() {
             this.showing = true;
         },
