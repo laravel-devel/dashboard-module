@@ -165,6 +165,8 @@ export default {
                 } else {
                     this.processing = false;
                 }
+
+                this.$emit('submitsuccess');
             })
             .catch(({ response }) => {
                 this.messageClass = 'danger';
@@ -188,6 +190,8 @@ export default {
                 });
 
                 this.processing = false;
+
+                this.$emit('submitfail');
             });
         },
 
