@@ -295,6 +295,14 @@ export default {
                 this.selectedItemsAll = (selected.length === this.items.length);
             }
         },
+
+        tableData: {
+            deep: true,
+
+            handler: function () {
+                this.$emit('data-updated', this.tableData);
+            }
+        }
      },
 
     methods: {
