@@ -14,7 +14,7 @@
  */
 Route::get('/', [
     'as' => 'index',
-    'uses' => 'DashboardController@index',
+    'uses' => config('develdashboard.dashboard_controller') . '@index',
 ]);
 
 /**

@@ -17,5 +17,11 @@ return [
      * You can set a custom controller for the main site's SettingsControllers
      * here if you need customization.
      */
+    'dashboard_controller' => '\Modules\DevelDashboard\Http\Controllers\DashboardController',
+
+    /**
+     * You can set a custom controller for the main site's SettingsControllers
+     * here if you need customization.
+     */
     'site_settings_controller' => '\Modules\DevelDashboard\Http\Controllers\SettingsController',
 ];
