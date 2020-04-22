@@ -1,39 +1,45 @@
 <template>
     <div class="form-group" :class="{ 'inline': inline }">
-        <v-fel-input v-if="inputTypes.indexOf(field.type) >= 0"
-            :attrs="attrs"
-            :value="val"
-            @input="onInput"></v-fel-input>
-
-        <v-fel-checkbox v-else-if="field.type === 'checkbox'"
-            :attrs="attrs"
-            :value="val"
-            @input="onInput"></v-fel-checkbox>
-
-        <v-fel-switch v-else-if="field.type === 'switch'"
-            :attrs="attrs"
-            :value="val"
-            @input="onInput"></v-fel-switch>
-
-        <v-fel-link v-else-if="field.type === 'link'"
-            :attrs="attrs"></v-fel-link>
-
-        <v-fel-select v-else-if="field.type === 'select'"
-            :attrs="attrs"
-            :value="val"
+        <slot :attrs="attrs"
+            :val="val"
             :collections="collections"
-            @input="onInput"></v-fel-select>
+            :on-input="onInput"
+        >
+            <v-fel-input v-if="inputTypes.indexOf(field.type) >= 0"
+                :attrs="attrs"
+                :value="val"
+                @input="onInput"></v-fel-input>
 
-        <v-fel-daterange v-else-if="field.type === 'daterange'"
-            :attrs="attrs"
-            :value="val"
-            :collections="collections"
-            @input="onInput"></v-fel-daterange>
+            <v-fel-checkbox v-else-if="field.type === 'checkbox'"
+                :attrs="attrs"
+                :value="val"
+                @input="onInput"></v-fel-checkbox>
 
-        <v-fel-file v-else-if="field.type === 'file'"
-            :attrs="attrs"
-            :value="val"
-            @input="onInput"></v-fel-file>
+            <v-fel-switch v-else-if="field.type === 'switch'"
+                :attrs="attrs"
+                :value="val"
+                @input="onInput"></v-fel-switch>
+
+            <v-fel-link v-else-if="field.type === 'link'"
+                :attrs="attrs"></v-fel-link>
+
+            <v-fel-select v-else-if="field.type === 'select'"
+                :attrs="attrs"
+                :value="val"
+                :collections="collections"
+                @input="onInput"></v-fel-select>
+
+            <v-fel-daterange v-else-if="field.type === 'daterange'"
+                :attrs="attrs"
+                :value="val"
+                :collections="collections"
+                @input="onInput"></v-fel-daterange>
+
+            <v-fel-file v-else-if="field.type === 'file'"
+                :attrs="attrs"
+                :value="val"
+                @input="onInput"></v-fel-file>
+        </slot>
 
         <div v-if="errors" class="hint danger">
             {{ errors[0] }}

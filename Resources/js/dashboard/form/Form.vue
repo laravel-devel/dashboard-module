@@ -16,7 +16,11 @@
             ></div>
         </div>
 
-        <slot v-bind:errors="errors" v-bind:values="values" v-bind:read-only="readOnly">
+        <slot v-bind:errors="errors"
+            v-bind:values="values"
+            v-bind:read-only="readOnly"
+            v-bind:collections="collections"
+        >
             <v-form-tab v-for="(key, index) in Object.keys(fields)"
                 :key="index"
                 :show="slug(key) === activeTab"
