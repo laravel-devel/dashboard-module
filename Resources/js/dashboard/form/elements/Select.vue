@@ -133,7 +133,17 @@ export default {
         this.multipleChoice = (this.attrs.multipleChoice == true);
 
         if (this.value) {
-            for (let item of this.value) {
+            const value = Array.isArray(this.value) ? this.value : [this.value];
+
+            for (let item of value) {
+                if (typeof item !== 'object') {
+                    item = this.options.find(i => i[this.idField] === item);
+                    
+                    if (!item) {
+                        continue;
+                    }
+                }
+
                 this.selectedOptions.push(this.formatOption(item));
             }
         } else if (this.attrs.required) {
@@ -253,6 +263,10 @@ export default {
         },
 
         onValueUpdated(newValue) {
+            if (!Array.isArray(newValue)) {
+                newValue = [newValue];
+            }
+
             this.selections = newValue;
 
             this.selectedOptions.splice(0);
