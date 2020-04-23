@@ -127,7 +127,11 @@ export default {
             }
 
             return this.attrs.name
-                ? this.$parent.values[this.attrs.name]
+                ? (
+                    this.$parent.values.hasOwnProperty(this.attrs.name)
+                        ? this.$parent.values[this.attrs.name]
+                        : this.value
+                )
                 : undefined;
         },
     },
