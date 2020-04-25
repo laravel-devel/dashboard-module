@@ -47,7 +47,7 @@
                 </div>
             </div>
 
-            <div class="flex flex-align-center">
+            <div class="flex flex-align-center top-panel-extra">
                 <slot name="top-panel"></slot>
 
                 <a v-if="hasActions && createAction && allowedTo('create')"

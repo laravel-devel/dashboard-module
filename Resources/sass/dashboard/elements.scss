@@ -60,6 +60,7 @@
         background-color: $primaryInactive;
         box-shadow: 0 0 0;
         cursor: default;
+        pointer-events: none;
     }
     
     // Button styles
@@ -101,6 +102,12 @@
     td {
         &.actions {
             white-space: nowrap;
+        }
+    }
+
+    .top-panel-extra {
+        .form-group {
+            width: auto;
         }
     }
 }
