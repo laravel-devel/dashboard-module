@@ -118,6 +118,12 @@
                             </template>
                         </td>
                     </tr>
+
+                    <tr v-if="!items.length" class="m-1 text-center">
+                        <td :colspan="Object.keys(visibleFields).length">
+                            NO DATA
+                        </td>
+                    </tr>
                 </tbody>
             </table>
 
@@ -474,6 +480,12 @@ export default {
                 .then(({ data }) => {
                     this.tableData = data;
                     this.items = data.data;
+
+                    if (this.page > data.last_page && this.page > 1) {
+                        this.page = data.last_page;
+
+                        this.fetchData();
+                    }
 
                     this.processing = false;
                 });
