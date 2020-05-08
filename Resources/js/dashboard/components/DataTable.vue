@@ -56,7 +56,7 @@
             </div>
         </div>
 
-        <div class="table-wrapper">
+        <div class="table-wrapper" ref="table-wrapper">
             <table class="table card">
                 <thead>
                     <th v-if="bulkActionsOn && hasBulkActions" class="bulk-actions">
@@ -487,6 +487,8 @@ export default {
             this.page = page;
 
             this.fetchData();
+
+            this.scrollToTop();
         },
 
         toggleSort(key) {
@@ -687,6 +689,10 @@ export default {
 
             this.selectedBulkAction = [];
         },
+
+        scrollToTop() {
+            this.$refs['table-wrapper'].scrollIntoView();
+        }
     }
 }
 </script>
