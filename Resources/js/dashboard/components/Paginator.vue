@@ -1,7 +1,7 @@
 <template>
     <div v-show="lastPage > 1" class="paginator">
         <div class="summary">
-            Showing page {{ page }} of {{ lastPage }}
+            Showing rows {{ info.from }}-{{ info.to }} from {{ info.total }}
         </div>
 
         <div class="nav">
@@ -10,6 +10,17 @@
                 :disabled="page == 1"
                 @click.prevent="prevPage">Prev</a>
 
+            <template v-if="showFirstPage">
+                <a href="#"
+                    class="btn number"
+                    :class="{ active: page == 1 }"
+                    @click.prevent="changePage(1)">1</a>
+
+                <a href="#"
+                    class="btn dots"
+                    @click.prevent="leapBackwrad">...</a>
+            </template>
+
             <a v-for="(p, index) in pages"
                 :key="index"
                 href="#"
@@ -17,6 +28,18 @@
                 :class="{ active: p == page }"
                 @click.prevent="changePage(p)"
                 v-text="p"></a>
+
+            <template v-if="showLastPage">
+                <a href="#"
+                    class="btn dots"
+                    @click.prevent="leapForward">...</a>
+
+                <a href="#"
+                    class="btn number"
+                    :class="{ active: page == lastPage }"
+                    @click.prevent="changePage(lastPage)"
+                    v-text="lastPage"></a>
+            </template>
                 
             <a href="#"
                 class="btn"
@@ -58,7 +81,27 @@ export default {
     computed: {
         lastPage() {
             return this.info ? this.info.last_page : 1;
-        }
+        },
+
+        showFirstPage() {
+            if (this.lastPage <= this.maxNumbers) {
+                return;
+            }
+            
+            const threshold = Math.ceil(this.maxNumbers / 2);
+
+            return (this.page > threshold);
+        },
+
+        showLastPage() {
+            if (this.lastPage <= this.maxNumbers) {
+                return;
+            }
+
+            const threshold = Math.floor(this.maxNumbers / 2);
+
+            return (this.page < this.lastPage - threshold);
+        },
     },
 
     watch: {
@@ -123,6 +166,18 @@ export default {
             }
 
             this.changePage(page);
+        },
+
+        leapBackwrad() {
+            let page = this.page - this.maxNumbers;
+
+            this.changePage(page < 1 ? 1 : page);
+        },
+
+        leapForward() {
+            let page = this.page + this.maxNumbers;
+
+            this.changePage(page > this.lastPage ? this.lastPage : page);
         },
     }
 }
