@@ -45,7 +45,12 @@
 
                     <li v-for="(option, index) in filteredOptions"
                         :key="index"
-                        @click="selectOption(option)">{{ option[textField] }}</li>
+                        @click="selectOption(option)"
+                        :class="{
+                            'group-name': option.groupName,
+                            'has-groups': attrs.optionsGroupped,
+                        }"
+                    >{{ option[textField] }}</li>
                 </ul>
             </div>
 
@@ -132,6 +137,28 @@ export default {
         this.textField = this.attrs.textField;
         this.multipleChoice = (this.attrs.multipleChoice == true);
 
+        // If options are groupped
+        if (this.attrs.optionsGroupped) {
+            const ungrouppedOptions = [];
+
+            for (let group of Object.keys(this.options)) {
+                // Push the group names
+                ungrouppedOptions.push({
+                    [this.idField]: '',
+                    [this.textField]: group,
+                    groupName: true,
+                });
+
+                // Push the group items
+                for (let item of this.options[group]) {
+                    ungrouppedOptions.push(item);
+                }
+            }
+
+            this.options = ungrouppedOptions;
+        }
+
+        // Select selected options
         if (this.value) {
             const value = Array.isArray(this.value) ? this.value : [this.value];
 
@@ -184,6 +211,7 @@ export default {
             return {
                 [this.idField]: option[this.idField],
                 [this.textField]: option[this.textField],
+                groupName: option['groupName'] ? option['groupName'] : false,
             };
         },
 
@@ -218,6 +246,11 @@ export default {
         },
 
         selectOption(option) {
+            // Group names cannot be selected
+            if (option.groupName) {
+                return;
+            }
+
             if (!this.multipleChoice) {
                 this.selectedOptions.splice(0);
             }

@@ -218,6 +218,11 @@
 
             .placeholder, .value {
                 @include noselect;
+
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                padding-right: 2.5rem;
             }
 
             .select-arrow {
@@ -251,7 +256,7 @@
 
         .select-dropdown {
             position: absolute;
-            width: 100%;
+            min-width: 100%;
             background-color: $whiteActive;
             box-shadow: $slightElevation;
             max-height: 13rem;
@@ -267,6 +272,19 @@
 
                     &:hover {
                         background-color: $primaryInactive;
+                    }
+
+                    &.has-groups {
+                        padding-left: 1.5rem;
+                    }
+
+                    &.group-name {
+                        padding-left: .75rem;
+                        font-weight: 600;
+                        cursor: default;
+                        pointer-events: none;
+                        color: $primary;
+                        border-bottom: 1px solid #eee;
                     }
                 }
             }
