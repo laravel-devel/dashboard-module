@@ -16,7 +16,7 @@
                         }"
                         :collections="{ [filter.name]: filter.options }"
                         v-model="filter.value"
-                        class="search-field"></v-form-el>
+                        class="filter-field"></v-form-el>
                 </div>
             </div>
         </div>
