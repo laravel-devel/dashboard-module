@@ -109,12 +109,8 @@
                                     :class="`action-btn ${action.class ? action.class : 'primary'}`"
                                     :title="action.title ? action.title : ''"
                                     @click.prevent="confirmAction(action, item)"
-                                >
-                                    <i v-if="action.icon"
-                                        :class="`las ${action.icon}`"></i>
-
-                                    <span v-else v-text="action.title"></span>
-                                </a>
+                                    v-html="actionIcon(action, item)"
+                                ></a>
                             </template>
                         </td>
                     </tr>
@@ -704,6 +700,16 @@ export default {
 
         scrollToTop() {
             this.$refs['table-wrapper'].scrollIntoView();
+        },
+
+        actionIcon(action, item) { 
+            if (action.customIcon) {
+                return eval(action.customIcon);
+            } else if (action.icon) {
+                return `<i class="las ${action.icon}"></i>`;
+            }
+            
+            return `<span>${action.title}</span>`;
         }
     }
 }
