@@ -132,6 +132,8 @@ trait Crud
     protected function setActions(array $actions): void
     {
         foreach ($actions as $action => $values) {
+            $route = null;
+
             if (is_numeric(array_keys($values)[0])) {
                 $this->datatableActions[$action] = [
                     'url' => route($values[0], $values[1] ?? null),
@@ -139,16 +141,21 @@ trait Crud
 
                 $route = $values[0];
             } else {
-                $route = $values['url'][0];
-
-                $values['url'] = route($values['url'][0], $values['url'][1] ?? null);
+                if (isset($values['url'])) {
+                    $route = $values['url'][0];
+                
+                    $values['url'] = route($values['url'][0], $values['url'][1] ?? null);
+                }
 
                 $this->datatableActions[$action] = $values;
             }
 
             // Set permissions for each route
-            $this->datatablePermissions[$action] =
-                \Route::getRoutes()->getByName($route)->getAction()['permissions'] ?? [];
+            if ($route) {
+                $this->datatablePermissions[$action] = \Route::getRoutes()
+                    ->getByName($route)
+                    ->getAction()['permissions'] ?? [];
+            }
         }
     }
 

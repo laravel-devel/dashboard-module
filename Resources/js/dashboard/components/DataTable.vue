@@ -103,7 +103,7 @@
 
                         <td v-if="hasActions" class="actions">
                             <template v-for="(action, index) in allActions.single">
-                                <a v-if="allowedTo(action.name)"
+                                <a v-if="allowedTo(action.name) && showActionForItem(action, item)"
                                     :key="index"
                                     href="#"
                                     :class="`action-btn ${action.class ? action.class : 'primary'}`"
@@ -407,7 +407,8 @@ export default {
             // Some default action have default settings
             if (name === 'create' || name === 'edit') {
                 action.ajax = false;
-                action.noBulk = true;
+                // NOTE: Doesn't seem like 'noBulk' is used anywhere
+                // action.noBulk = true;
             }
 
             if (name === 'create') {
@@ -431,15 +432,8 @@ export default {
                 action.method = 'delete';
             }
 
-            // Add action to the single actions collection
-            if (action.url) {
-                const a = Object.assign({}, action, { bulk: false });
-
-                this.allActions.single.push(a);
-            }
-
             // Add action to the bulk actions collection
-            if (action.bulkUrl) {
+            if (action.bulkUrl || action.bulk) {
                 const b = Object.assign({}, action, { bulk: true });
                 
                 // Bulk deletes are done via POST
@@ -448,6 +442,11 @@ export default {
                 }
 
                 this.allActions.bulk.push(b);
+            } else {
+                // Add action to the single actions collection
+                const a = Object.assign({}, action, { bulk: false });
+
+                this.allActions.single.push(a);
             }
         },
 
@@ -548,6 +547,11 @@ export default {
         actionEndpoint(action, item) {
             let url = action.bulk ? action.bulkUrl : action.url;
 
+            // If the action has no URLs
+            if (!url) {
+                return null;
+            }
+
             if (action.bulk) {
                 return url;
             }
@@ -597,7 +601,9 @@ export default {
 
             // A non-AJAX action - just go to the URL
             if (!action.ajax) {
-                window.location = url;
+                if (url) {
+                    window.location = url;
+                }
 
                 return;
             }
@@ -710,6 +716,14 @@ export default {
             }
             
             return `<span>${action.title}</span>`;
+        },
+
+        showActionForItem(action, item) {
+            if (!action.hasOwnProperty('show')) {
+                return true
+            };
+
+            return eval(action.show);
         }
     }
 }
