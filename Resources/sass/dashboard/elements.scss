@@ -74,6 +74,11 @@
             color: $primaryHover;
         }
     }
+
+    &.btn-min {
+        padding: .25rem .5rem;
+        font-size: .8rem;
+    }
 }
 
 .datatable {
@@ -238,6 +243,9 @@
 
 .modal {
     max-width: 95%;
+    max-height: 95%;
+    overflow-x: hidden;
+    overflow-y: auto;
 }
 
 .notifications-overlay {
