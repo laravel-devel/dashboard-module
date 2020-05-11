@@ -144,7 +144,7 @@ trait Crud
             } else {
                 if (isset($values['url'])) {
                     $route = $values['url'][0];
-                
+
                     $values['url'] = route($values['url'][0], $values['url'][1] ?? null);
                 }
 
@@ -239,8 +239,7 @@ trait Crud
      */
     public function get(Request $request)
     {
-        $model = $this->model();
-        $table = (new $model)->getTable();
+        $table = $this->getModelTable();
 
         $query = $this->model()::select("{$table}.*")
             ->sort($request->sort)
@@ -341,7 +340,7 @@ trait Crud
         if (!count($ids)) {
             return response()->json([]);
         }
-        
+
         foreach ($ids as $id) {
             if (($can = $this->canBeDeleted($request, $id)) !== true) {
                 return response()->json([
@@ -550,5 +549,12 @@ trait Crud
         }
 
         return $query;
+    }
+
+    protected function getModelTable(): string
+    {
+        $model = $this->model();
+
+        return (new $model)->getTable();
     }
 }
