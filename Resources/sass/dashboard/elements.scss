@@ -111,6 +111,10 @@
     td {
         &.actions {
             white-space: nowrap;
+
+            .el-icon--right {
+                margin-left: 0;
+            }
         }
     }
 
@@ -162,10 +166,10 @@
     .action-btn {
         display: inline-block;
         color: $primary;
+        padding: .25rem;
 
         i {
             font-size: 1.1rem;
-            padding: .25rem;
         }
 
         &:hover { color: $primaryHover; }

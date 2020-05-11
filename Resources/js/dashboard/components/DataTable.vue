@@ -103,7 +103,33 @@
 
                         <td v-if="hasActions" class="actions">
                             <template v-for="(action, index) in allActions.single">
-                                <a v-if="allowedTo(action.name) && showActionForItem(action, item)"
+                                <el-dropdown v-if="isActionsList(action)"
+                                    :key="index"
+                                    @command="onDropdownActionClick"
+                                >
+                                    <a href="#"
+                                        class="el-dropdown-link"
+                                        :class="`action-btn ${action.class ? action.class : 'primary'}`"
+                                        :title="action.title ? action.title : ''"
+                                        @click.prevent
+                                    >
+                                        <span v-html="actionIcon(action, item)"></span><i class="el-icon-arrow-down el-icon--right"></i>
+                                    </a>
+
+                                    <el-dropdown-menu slot="dropdown" >
+                                        <template v-for="(subAction, index) in action.list">
+                                            <el-dropdown-item :key="index"
+                                                v-if="allowedTo(subAction.name) && showActionForItem(subAction, item)"
+                                                :title="subAction.title ? subAction.title : ''"
+                                                :command="{ subAction, item }"
+                                                @click="confirmAction(subAction, item)"
+                                                v-html="actionIcon(subAction, item)"
+                                            ></el-dropdown-item>
+                                        </template>
+                                    </el-dropdown-menu>
+                                </el-dropdown>
+
+                                <a v-else-if="!action.grouped && allowedTo(action.name) && showActionForItem(action, item)"
                                     :key="index"
                                     href="#"
                                     :class="`action-btn ${action.class ? action.class : 'primary'}`"
@@ -393,6 +419,16 @@ export default {
         },
 
         parseAction(name, action) {
+            // If the action is a list of actions - add all its children first
+            if (this.isActionsList(action)) {
+                for (let subName of Object.keys(action.list)) {
+                    const subAction = action.list[subName];
+                    subAction.grouped = true;
+
+                    this.parseAction(subName, action.list[subName]);
+                }
+            }
+
             // Calculate action properties
             action.name = name;
             action.confirm = action.confirm ? action.confirm : false;
@@ -724,6 +760,15 @@ export default {
             };
 
             return eval(action.show);
+        },
+
+        isActionsList(action) {
+            return action.hasOwnProperty('list')
+                && typeof action.list === 'object';
+        },
+
+        onDropdownActionClick(data) {
+            this.confirmAction(data.subAction, data.item);
         }
     }
 }

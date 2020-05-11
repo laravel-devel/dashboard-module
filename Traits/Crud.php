@@ -100,7 +100,7 @@ trait Crud
     protected function setDatatable(array $fields, array $actions = [], array $filters = []): void
     {
         $this->datatableFields = $fields;
-        $this->setActions($actions);
+        $this->setActions($this->datatableActions, $actions);
         $this->datatableFilters = $filters;
     }
 
@@ -126,16 +126,17 @@ trait Crud
     /**
      * Set datatable actions
      *
+     * @param array $collection
      * @param array $actions
      * @return void
      */
-    protected function setActions(array $actions): void
+    protected function setActions(array &$collection, array $actions): void
     {
         foreach ($actions as $action => $values) {
             $route = null;
 
             if (is_numeric(array_keys($values)[0])) {
-                $this->datatableActions[$action] = [
+                $collection[$action] = [
                     'url' => route($values[0], $values[1] ?? null),
                 ];
 
@@ -147,7 +148,7 @@ trait Crud
                     $values['url'] = route($values['url'][0], $values['url'][1] ?? null);
                 }
 
-                $this->datatableActions[$action] = $values;
+                $collection[$action] = $values;
             }
 
             // Set permissions for each route
@@ -155,6 +156,14 @@ trait Crud
                 $this->datatablePermissions[$action] = \Route::getRoutes()
                     ->getByName($route)
                     ->getAction()['permissions'] ?? [];
+            }
+
+            // If the action has children actions - add them too
+            if (isset($values['list'])) {
+                $this->setActions(
+                    $collection[$action]['list'],
+                    $values['list']
+                );
             }
         }
     }
@@ -533,7 +542,7 @@ trait Crud
                         : \Str::snake($relation);
                 }
 
-                // If the relationship still doesn't exist - let it throw an 
+                // If the relationship still doesn't exist - let it throw an
                 // exception
 
                 $query->with($relation);
