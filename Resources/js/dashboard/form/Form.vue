@@ -170,7 +170,7 @@ export default {
                     this.processing = false;
                 }
 
-                this.$emit('submitsuccess');
+                this.$emit('submitsuccess', data);
             })
             .catch(({ response }) => {
                 this.messageClass = 'danger';
@@ -195,7 +195,7 @@ export default {
 
                 this.processing = false;
 
-                this.$emit('submitfail');
+                this.$emit('submitfail', response);
             });
         },
 
