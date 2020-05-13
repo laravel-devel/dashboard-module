@@ -5,3 +5,7 @@
         margin: 1rem 0;
     }
 }
+
+.el-date-editor--daterange.el-input__inner {
+    width: auto !important;
+}

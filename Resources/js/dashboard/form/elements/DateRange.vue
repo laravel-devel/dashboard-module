@@ -11,7 +11,8 @@
             start-placeholder="Start date"
             end-placeholder="End date"
             :picker-options="pickerOptions"
-            :disabled="attrs.disabled">
+            :disabled="attrs.disabled"
+            class="fullwidth-force">
         </el-date-picker>
 
         <input

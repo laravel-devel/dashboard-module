@@ -49,3 +49,7 @@
 
 /* Visibility */
 .hidden { display: none; }
+
+/* Width, height */
+.fullwidth { width: 100%; }
+.fullwidth-force { width: 100% !important; }

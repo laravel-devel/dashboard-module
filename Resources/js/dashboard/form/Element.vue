@@ -29,10 +29,14 @@
                 :collections="collections"
                 @input="onInput"></v-fel-select>
 
+            <v-fel-datetime v-else-if="field.type === 'datetime'"
+                :attrs="attrs"
+                :value="val"
+                @input="onInput"></v-fel-datetime>
+
             <v-fel-daterange v-else-if="field.type === 'daterange'"
                 :attrs="attrs"
                 :value="val"
-                :collections="collections"
                 @input="onInput"></v-fel-daterange>
 
             <v-fel-file v-else-if="field.type === 'file'"
@@ -53,6 +57,7 @@ import Checkbox from './elements/Checkbox';
 import Switch from './elements/Switch';
 import Link from './elements/Link';
 import Select from './elements/Select';
+import DateTime from './elements/DateTime';
 import DateRange from './elements/DateRange';
 import File from './elements/File';
 
@@ -63,6 +68,7 @@ export default {
         'v-fel-switch': Switch,
         'v-fel-link': Link,
         'v-fel-select': Select,
+        'v-fel-datetime': DateTime,
         'v-fel-daterange': DateRange,
         'v-fel-file': File,
     },
