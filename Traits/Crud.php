@@ -341,6 +341,18 @@ trait Crud
             return response()->json([]);
         }
 
+        $model = new $this->modelClass;
+
+        if ($ids[0] === 'all') {
+            // Select all filtered ids
+            $ids = $this->model()::select($model->getRouteKeyName())
+                ->filter($request)
+                ->search($request->search)
+                ->get()
+                ->pluck($model->getRouteKeyName())
+                ->toArray();
+        }
+
         foreach ($ids as $id) {
             if (($can = $this->canBeDeleted($request, $id)) !== true) {
                 return response()->json([
@@ -349,18 +361,13 @@ trait Crud
             }
         }
 
-        $model = new $this->modelClass;
-
-        foreach ($ids as $id) {
-            $object = $this->model()::where($model->getRouteKeyName(), $id)->first();
-
-            if (!$object) {
-                continue;
-            }
-
-            // Calling delete on each object separately to trigger Model events
-            $object->delete();
-        }
+        $this->model()::whereIn($model->getRouteKeyName(), $ids)
+            ->chunk(500, function ($items) {
+                foreach ($items as $item) {
+                    // Calling delete on each object separately to trigger Model events
+                    $item->delete();
+                }
+            });
 
         return response()->json([]);
     }
