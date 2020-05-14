@@ -64,7 +64,7 @@
                             :field="{
                                 type: 'checkbox'
                             }"
-                            v-model="selectedItemsAll"
+                            v-model="selectedItemsAllPage"
                             @change="onSelectAllToggle"></v-form-el>
                     </th>
 
@@ -88,13 +88,22 @@
                 </thead>
                 
                 <tbody>
+                    <tr v-if="selectedItemsAllPage && !this.selectedItems.all">
+                        <td :colspan="columnsCount" class="text-center">
+                            All items on this page are selected.
+                            <a href="#" @click.prevent="selectAllItems">
+                                Select all existing items
+                            </a>
+                        </td>
+                    </tr>
                     <tr v-for="(item, index) in items" :key="index">
                         <td v-if="bulkActionsOn && hasBulkActions" class="bulk-actions">
                             <v-form-el :inline="true"
                                 :field="{
                                     type: 'checkbox'
                                 }"
-                                v-model="selectedItems[index]"></v-form-el>
+                                v-model="selectedItems[index]"
+                                @change="onItemSelectionToggled(item)"></v-form-el>
                         </td>
 
                         <td v-for="key in Object.keys(visibleFields)"
@@ -217,23 +226,7 @@ export default {
     computed: {
         endpoint() {
             // Filters
-            let filters = '';
-            
-            for (let filter of this.filterFields) {
-                if (filter.value === undefined || filter.value === null) {
-                    continue;
-                }
-
-                let value = filter.value;
-                // Dots get converted to underscores when sending form data, so:
-                let name = filter.name.replace(/\./g, '__');
-
-                if (Array.isArray(value)) {
-                    value = value.join('|');
-                }
-
-                filters += `&f_${name}=${value}`;
-            }
+            const filters = this.makeFiltersQuery();
 
             return `${this.baseUrl}?page=${this.page}&sort=${this.sort}|${this.sortAsc ? 'asc' : 'desc'}&search=${this.searchQuery}${filters}`;
         },
@@ -245,6 +238,12 @@ export default {
         hasBulkActions() {
             return this.allActions.bulk && this.allActions.bulk.length > 0;
         },
+
+        columnsCount() {
+            return Object.keys(this.visibleFields).length
+                + (this.bulkActionsOn && this.hasBulkActions ? 1 : 0)
+                + (this.hasActions ? 1 : 0)
+        }
     },
 
     data() {
@@ -254,7 +253,7 @@ export default {
             tableData: [],
             items: [],
             selectedItems: {},
-            selectedItemsAll: false,
+            selectedItemsAllPage: false,
             page: 1,
             sort: Object.keys(this.fields)[0],
             sortAsc: true,
@@ -315,12 +314,16 @@ export default {
         selectedItems: {
             deep: true,
 
-            handler: function () {
+            handler: function (newVal, oldVal) {
                 let selected = Object.keys(this.selectedItems).filter(key => {
+                    if (key === 'all') {
+                        return false;
+                    }
+                    
                     return this.selectedItems[key];
                 });
 
-                this.selectedItemsAll = (selected.length === this.items.length);
+                this.selectedItemsAllPage = (selected.length === this.items.length);
             }
         },
 
@@ -504,6 +507,28 @@ export default {
             }
         },
 
+        makeFiltersQuery() {
+            let filters = '';
+            
+            for (let filter of this.filterFields) {
+                if (filter.value === undefined || filter.value === null) {
+                    continue;
+                }
+
+                let value = filter.value;
+                // Dots get converted to underscores when sending form data, so:
+                let name = filter.name.replace(/\./g, '__');
+
+                if (Array.isArray(value)) {
+                    value = value.join('|');
+                }
+
+                filters += `&f_${name}=${value}`;
+            }
+
+            return filters;
+        },
+
         fetchData() {
             this.processing = true;
 
@@ -589,7 +614,10 @@ export default {
             }
 
             if (action.bulk) {
-                return url;
+                // Apply filters to the URL for bulk actions
+                const filters = this.makeFiltersQuery();
+
+                return `${url}?search=${this.searchQuery}${filters}`;
             }
 
             const params = url.match(new RegExp(':([a-zA-Z].*?)(/|$)', 'g'));
@@ -649,7 +677,7 @@ export default {
             if (action.bulk) {
                 const indexes = Object.keys(this.selectedItems).filter(index => {
                     return this.selectedItems[index];
-                }).map(key => parseInt(key));
+                });
 
                 if (!indexes.length) {
                     return;
@@ -658,10 +686,14 @@ export default {
                 const selected = [];
 
                 // Populate data
-                for (let i of indexes) {
-                    const item = this.items[i];
+                if (indexes.indexOf('all') > -1) {
+                    selected.push('all');
+                } else {
+                    for (let i of indexes) {
+                        const item = this.items[i];
 
-                    selected.push(item[this.primaryKey]);
+                        selected.push(item[this.primaryKey]);
+                    }
                 }
                 
                 data = { items: selected };
@@ -715,10 +747,20 @@ export default {
             });
         },
 
+        onItemSelectionToggled(item) {
+            this.$set(this.selectedItems, 'all', false);
+        },
+
         onSelectAllToggle() {
+            this.$set(this.selectedItems, 'all', false);
+
             for (let i = 0; i < this.items.length; i++) {
-                this.$set(this.selectedItems, i, this.selectedItemsAll);
+                this.$set(this.selectedItems, i, this.selectedItemsAllPage);
             }
+        },
+
+        selectAllItems() {
+            this.$set(this.selectedItems, 'all', true);
         },
 
         onBulkActionSelected() {

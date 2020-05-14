@@ -557,4 +557,31 @@ trait Crud
 
         return (new $model)->getTable();
     }
+
+    /**
+     * Prepare the base query for a bulk action.
+     *
+     * @param mixed $request
+     * @return void
+     */
+    public function prepareBulkActionQuery($request)
+    {
+        $ids = $request->get('items');
+
+        if (!count($ids)) {
+            return null;
+        }
+
+        $query = $this->model()::query();
+
+        if ($ids[0] === 'all') {
+            // Apply filters
+            $query->filter($request)
+                ->search($request->search);
+        } else {
+            $query->whereIn('product_id', $ids);
+        }
+        
+        return $query;
+    }
 }
