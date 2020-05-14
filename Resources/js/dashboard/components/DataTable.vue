@@ -92,7 +92,7 @@
                         <td :colspan="columnsCount" class="text-center">
                             All items on this page are selected.
                             <a href="#" @click.prevent="selectAllItems">
-                                Select all existing items
+                                Select all {{ tableData.total }} items
                             </a>
                         </td>
                     </tr>
@@ -295,6 +295,8 @@ export default {
             clearTimeout(this.searchTimeout);
 
             this.searchTimeout = setTimeout(() => {
+                this.$set(this.selectedItems, 'all', false);
+
                 this.fetchData();
             }, 250);
         },
@@ -306,6 +308,8 @@ export default {
                 if (!this.initialized) {
                     return;
                 }
+
+                this.$set(this.selectedItems, 'all', false);
                 
                 this.fetchData();
             }
