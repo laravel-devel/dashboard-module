@@ -658,6 +658,9 @@ export default {
                 this.$confirm(confirmation, 'Confirmation', {})
                     .then(() => {
                         this.doAction(action, item);
+                    })
+                    .catch(() => {
+                        // Ignore 'cancel' button press
                     });
             } else {
                 this.doAction(action, item);
