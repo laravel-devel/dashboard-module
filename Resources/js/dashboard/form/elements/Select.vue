@@ -48,7 +48,7 @@
                         @click="selectOption(option)"
                         :class="{
                             'group-name': option.groupName,
-                            'has-groups': attrs.optionsGroupped,
+                            'subitem': option.isSubitem,
                         }"
                     >{{ option[textField] }}</li>
                 </ul>
@@ -137,26 +137,25 @@ export default {
         this.textField = this.attrs.textField;
         this.multipleChoice = (this.attrs.multipleChoice == true);
 
-        // If options are groupped
-        if (this.attrs.optionsGroupped) {
-            const ungrouppedOptions = [];
+        // Extract/process any groupped options
+        const ungrouppedOptions = [];
 
-            for (let group of Object.keys(this.options)) {
-                // Push the group names
-                ungrouppedOptions.push({
-                    [this.idField]: '',
-                    [this.textField]: group,
-                    groupName: true,
-                });
+        for (let option of this.options) {
+            // Add the option
+            ungrouppedOptions.push(option);
 
-                // Push the group items
-                for (let item of this.options[group]) {
-                    ungrouppedOptions.push(item);
+            // If the option has suboptions - add them
+            if (option.options) {
+                for (let suboption of option.options) {
+                    // console.log(suboption);
+                    ungrouppedOptions.push(Object.assign(suboption, {
+                        isSubitem: true,
+                    }));
                 }
             }
-
-            this.options = ungrouppedOptions;
         }
+
+        this.options = ungrouppedOptions;
 
         // Select selected options
         if (this.value) {
@@ -211,7 +210,8 @@ export default {
             return {
                 [this.idField]: option[this.idField],
                 [this.textField]: option[this.textField],
-                groupName: option['groupName'] ? option['groupName'] : false,
+                groupName: option.hasOwnProperty('options') && option.options !== undefined,
+                isSubitem: option.isSubitem ? true : false,
             };
         },
 

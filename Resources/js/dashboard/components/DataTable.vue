@@ -426,7 +426,9 @@ export default {
         },
 
         parseAction(name, action) {
-            // If the action is a list of actions - add all its children first
+            const isBulkAction = action.bulkUrl || action.bulk;
+
+            // If the action is a list of actions - add all its children too
             if (this.isActionsList(action)) {
                 for (let subName of Object.keys(action.list)) {
                     const subAction = action.list[subName];
@@ -476,7 +478,7 @@ export default {
             }
 
             // Add action to the bulk actions collection
-            if (action.bulkUrl || action.bulk) {
+            if (isBulkAction) {
                 const b = Object.assign({}, action, { bulk: true });
                 
                 // Bulk deletes are done via POST
@@ -504,10 +506,33 @@ export default {
             this.bulkActionsSelect.collection.bulkActions = [];
 
             for (let action of this.allActions.bulk) {
-                this.bulkActionsSelect.collection.bulkActions.push({
-                    name: action.name,
-                    title: action.title,
-                });
+                // Skip subactions at this point
+                if (action.grouped) {
+                    continue;
+                }
+
+                if (this.isActionsList(action)) {
+                    const options = [];
+
+                    for (let name of Object.keys(action.list)) {
+                        options.push({
+                            name: name,
+                            title: action.list[name].title,
+                        });
+                    }
+                    
+                    this.bulkActionsSelect.collection.bulkActions.push({
+                        name: action.name,
+                        title: action.title,
+                        options: options,
+                    });
+                } else {
+                    this.bulkActionsSelect.collection.bulkActions.push({
+                        name: action.name,
+                        title: action.title,
+                        options: action.options,
+                    });
+                }
             }
         },
 
