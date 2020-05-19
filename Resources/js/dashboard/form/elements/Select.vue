@@ -105,6 +105,7 @@ export default {
             : this.attrs.name;
 
         return {
+            collectionName: collectionName,
             options: (this.collections && this.collections[collectionName])
                 ? this.collections[collectionName]
                 : [],
@@ -170,11 +171,17 @@ export default {
                     }
                 }
 
-                this.selectedOptions.push(this.formatOption(item));
+                // Push a clone of the object, not the original object!
+                this.selectedOptions.push(
+                    this.formatOption(Object.assign({}, item))
+                );
             }
         } else if (this.attrs.required) {
             if (this.options.length) {
-                this.selectedOptions.push(this.formatOption(this.options[0]))
+                // Push a clone of the object, not the original object!
+                this.selectedOptions.push(
+                    this.formatOption(Object.assign({}, this.options[0]))
+                )
             }
         }
 
@@ -204,7 +211,26 @@ export default {
 
         value(newValue) {
             this.onValueUpdated(newValue);
-        }
+        },
+
+        collections(newVal, oldVal) {
+            newVal = newVal[this.collectionName] 
+                ? newVal[this.collectionName]
+                : [];
+
+            oldVal = oldVal[this.collectionName]
+                ? oldVal[this.collectionName]
+                : [];
+
+            if (newVal === oldVal) {
+                return;
+            }
+
+            this.options = newVal ? newVal : [];
+
+            this.calculateAvailableOptions();
+            this.filterOptions();
+        },
     },
 
     methods: {
@@ -257,7 +283,10 @@ export default {
                 this.selectedOptions.splice(0);
             }
 
-            this.selectedOptions.push(this.formatOption(option));
+            // Push a clone of the object, not the original object!
+            this.selectedOptions.push(
+                Object.assign({}, this.formatOption(option))
+            );
 
             this.search = '';
             this.open = false;
@@ -310,7 +339,8 @@ export default {
                 const item = this.options.find(item => item[this.idField] === option);
 
                 if (item) {
-                    this.selectedOptions.push(item);
+                    // Push a clone of the object, not the original object!
+                    this.selectedOptions.push(Object.assign({}, item));
                 }
             }
         }
