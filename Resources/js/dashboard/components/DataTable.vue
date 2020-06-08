@@ -327,7 +327,8 @@ export default {
                     return this.selectedItems[key];
                 });
 
-                this.selectedItemsAllPage = (selected.length === this.items.length);
+                this.selectedItemsAllPage = (selected.length === this.items.length
+                    && this.items.length > 0);
             }
         },
 
