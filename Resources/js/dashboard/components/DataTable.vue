@@ -151,7 +151,7 @@
                     </tr>
 
                     <tr v-if="!items.length" class="m-1 text-center">
-                        <td :colspan="Object.keys(visibleFields).length">
+                        <td :colspan="columnsCount">
                             NO DATA
                         </td>
                     </tr>
