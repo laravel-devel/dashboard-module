@@ -221,6 +221,11 @@ export default {
             type: Boolean,
             default: true,
         },
+
+        clientSideSorting: {
+            type: Boolean,
+            default: false,
+        },
     },
 
     computed: {
@@ -571,6 +576,12 @@ export default {
                         this.page = data.last_page;
 
                         this.fetchData();
+
+                        return;
+                    }
+                    
+                    if (this.clientSideSorting) {
+                        this.sortItemsClientSide();
                     }
 
                     this.processing = false;
@@ -597,7 +608,35 @@ export default {
             this.sortAsc = (this.sort !== key) ? true : ! this.sortAsc;
             this.sort = key;
 
-            this.fetchData();
+            if (this.clientSideSorting) {
+                this.sortItemsClientSide();
+            } else {
+                this.fetchData();
+            }
+        },
+        
+        sortItemsClientSide() {
+            this.items.sort(this.itemSortingFunction);
+        },
+
+        itemSortingFunction(a, b) {
+            if (!a[this.sort]) {
+                return this.sortAsc ? -1 : 1;
+            }
+
+            if (!b[this.sort]){
+                return this.sortAsc ? 1 : -1;
+            }
+
+            if (a[this.sort] < b[this.sort]) {
+                return this.sortAsc ? -1 : 1;
+            }
+
+            if (a[this.sort] > b[this.sort]) {
+                return this.sortAsc ? 1 : -1;
+            }
+
+            return 0;
         },
 
         formatted(field, item, key) {
