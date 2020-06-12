@@ -621,7 +621,7 @@ export default {
                 return this.sortAsc ? -1 : 1;
             }
 
-            if (!b[this.sort]){
+            if (!b[this.sort]) {
                 return this.sortAsc ? 1 : -1;
             }
 
