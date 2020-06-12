@@ -366,12 +366,9 @@ export default {
 
             let parts = this.sortBy.split('|');
 
-            if (parts.length < 2) {
-                return;
-            }
-
             this.sort = parts[0];
-            this.sortAsc = parts[1].toLowerCase() === 'asc';
+            this.sortAsc = parts.length === 1
+                || parts[1].toLowerCase() === 'asc';
         },
 
         parseFilters() {
