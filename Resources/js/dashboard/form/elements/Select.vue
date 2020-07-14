@@ -4,7 +4,7 @@
 
         <div class="select">
             <div class="select-input">
-                <input v-if="multipleChoice"
+                <input v-if="attrs.search || multipleChoice"
                     type="text"
                     class="form-element"
                     :placeholder="placeholder"
@@ -13,7 +13,7 @@
                     ref="input"
                     :disabled="attrs.disabled"
                     @focus="open = true">
-                
+
                 <div v-else class="form-element" ref="input" @click="toggleOpen">
                     <span v-if="selectedOptions.length > 0" class="value">
                         {{ selectedOptions[0][textField] }}
@@ -288,17 +288,32 @@ export default {
                 Object.assign({}, this.formatOption(option))
             );
 
-            this.search = '';
+            // For multi-choice - clear the search text after selecting an
+            // option
+            if (this.multipleChoice) {
+                this.search = '';
+            } else if (this.attrs.search) {
+                // For single-choice with search - set the search text to the
+                // selected option
+                this.search = option[this.textField];
+            }
+
             this.open = false;
 
             this.onSelectionsUpdated();
         },
 
         unselectOption(option = null) {
+            // When in single-choice mode
             if (!this.multipleChoice) {
                 this.selectedOptions = [];
 
                 this.onSelectionsUpdated();
+
+                // When the search is on - clear the search text
+                if (this.attrs.search) {
+                    this.search = '';
+                }
 
                 return;
             }
