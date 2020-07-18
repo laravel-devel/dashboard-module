@@ -42,11 +42,13 @@
 .form-group {
     width: 100%;
 
-    &.inline, .inline {
-        display: inline-block;
-    }
+    // TODO: Commenting this out fixes a problem, but I'm not sure if something
+    // else has broken somewhere, so keeping the block for now.
+    // &.inline, .inline {
+    //     display: inline-block;
+    // }
 
-    label {
+    label, .label {
         display: block;
         font-weight: 600;
         margin-bottom: .5rem;
@@ -84,7 +86,7 @@
         }
     }
 
-    .checkbox {
+    .checkbox, .radio {
         display: inline-block;
         position: relative;
         padding-left: 1.75rem;
@@ -150,6 +152,10 @@
                 background-color: $primaryInactive;
             }
         }
+    }
+
+    .radio .checkmark {
+        border-radius: 50%;
     }
 
     .switch {

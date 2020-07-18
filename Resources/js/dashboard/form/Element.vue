@@ -20,6 +20,11 @@
                 :value="val"
                 @input="onInput"></v-fel-switch>
 
+            <v-fel-radiogroup v-else-if="field.type === 'radiogroup'"
+                :attrs="attrs"
+                :value="val"
+                @input="onInput"></v-fel-radiogroup>
+
             <v-fel-link v-else-if="field.type === 'link'"
                 :attrs="attrs"></v-fel-link>
 
@@ -60,6 +65,7 @@ import Select from './elements/Select';
 import DateTime from './elements/DateTime';
 import DateRange from './elements/DateRange';
 import File from './elements/File';
+import RadioGroup from './elements/RadioGroup';
 
 export default {
     components: {
@@ -71,6 +77,7 @@ export default {
         'v-fel-datetime': DateTime,
         'v-fel-daterange': DateRange,
         'v-fel-file': File,
+        'v-fel-radiogroup': RadioGroup,
     },
 
     props: {
@@ -91,6 +98,11 @@ export default {
         showLabel: {
             type: Boolean,
             default: true,
+        },
+
+        disabled: {
+            type: Boolean,
+            default: false,
         },
 
         value: {},
@@ -128,17 +140,13 @@ export default {
                 return this.attrs.value;
             }
 
-            if (!this.$parent.values) {
-                return undefined;
-            }
-
             return this.attrs.name
                 ? (
-                    this.$parent.values.hasOwnProperty(this.attrs.name)
+                    this.$parent.values && this.$parent.values.hasOwnProperty(this.attrs.name)
                         ? this.$parent.values[this.attrs.name]
                         : this.value
                 )
-                : undefined;
+                : this.value ? this.value : undefined;
         },
     },
 
@@ -150,7 +158,7 @@ export default {
         this.$set(
             this.attrs,
             'disabled',
-            this.readOnly || ((this.attrs.disabled == true) ? true : false)
+            this.readOnly || this.disabled || ((this.attrs.disabled == true) ? true : false)
         );
 
         this.setChecked();
@@ -161,6 +169,14 @@ export default {
             this.$set(this.attrs, 'value', newVal);
 
             this.updateChecked();
+        },
+
+        disabled(newVal) {
+            this.$set(
+                this.attrs,
+                'disabled',
+                newVal
+            );
         }
     },
 
