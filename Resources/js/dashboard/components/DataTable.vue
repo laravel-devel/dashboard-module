@@ -182,7 +182,9 @@ export default {
 
         fields: {
             type: Object,
-            default: {},
+            default: () => {
+                return {};
+            },
             required: true,
         },
 
@@ -225,6 +227,18 @@ export default {
         clientSideSorting: {
             type: Boolean,
             default: false,
+        },
+
+        useLocalData: {
+            type: Boolean,
+            default: false,
+        },
+
+        localData: {
+            type: Object,
+            default: () => {
+                return {};
+            },
         },
     },
 
@@ -563,6 +577,20 @@ export default {
 
         fetchData() {
             this.processing = true;
+
+            // When local data was provided
+            if (this.useLocalData) {
+                this.tableData = this.localData;
+                this.items = this.localData.data;
+                
+                if (this.clientSideSorting) {
+                    this.sortItemsClientSide();
+                }
+
+                this.processing = false;
+
+                return;
+            }
 
             axios.get(this.endpoint)
                 .then(({ data }) => {
