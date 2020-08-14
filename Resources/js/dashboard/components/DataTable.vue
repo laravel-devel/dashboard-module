@@ -229,6 +229,16 @@ export default {
             default: false,
         },
 
+        clientSidePagination: {
+            type: Boolean,
+            default: false,
+        },
+
+        itemsPerPage: {
+            type: Number,
+            default: 20,
+        },
+
         useLocalData: {
             type: Boolean,
             default: false,
@@ -587,6 +597,15 @@ export default {
                     this.sortItemsClientSide();
                 }
 
+                if (this.clientSidePagination) {
+                    this.tableData = Object.assign(
+                        this.tableData,
+                        this.makePaginationData(this.items, this.page, this.itemsPerPage)
+                    );
+
+                    this.items = this.paginate(this.tableData, this.page);
+                }
+
                 this.processing = false;
 
                 return;
@@ -908,7 +927,25 @@ export default {
 
         onDropdownActionClick(data) {
             this.confirmAction(data.subAction, data.item);
-        }
+        },
+
+        makePaginationData(items, page = 1, itemsPerPage = 20) {
+            const lastPage = Math.ceil(items.length / itemsPerPage);
+            const total = items.length;
+            const from = itemsPerPage * page - (itemsPerPage - 1);
+            const to = from + (itemsPerPage - 1);
+
+            return {
+                last_page: lastPage,
+                total: total,
+                from: from,
+                to: (to <= total) ? to : total,
+            };
+        },
+
+        paginate(tableData, page) {
+            return tableData.data.slice(tableData.from - 1, tableData.to);
+        },
     }
 }
 </script>
