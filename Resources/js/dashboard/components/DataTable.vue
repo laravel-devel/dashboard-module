@@ -628,6 +628,15 @@ export default {
                         this.sortItemsClientSide();
                     }
 
+                    if (this.clientSidePagination) {
+                        this.tableData = Object.assign(
+                            this.tableData,
+                            this.makePaginationData(this.items, this.page, this.itemsPerPage)
+                        );
+
+                        this.items = this.paginate(this.tableData, this.page);
+                    }
+
                     this.processing = false;
                 });
         },
