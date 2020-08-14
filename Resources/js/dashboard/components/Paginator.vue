@@ -1,7 +1,7 @@
 <template>
     <div v-show="lastPage > 1" class="paginator">
         <div class="summary">
-            Showing rows {{ info.from }}-{{ info.to }} from {{ info.total }}
+            Showing rows {{ info.from }}-{{ info.to }} of {{ info.total }}
         </div>
 
         <div class="nav">
@@ -12,7 +12,7 @@
 
             <template v-if="showFirstPage">
                 <a href="#"
-                    class="btn number"
+                    class="btn page"
                     :class="{ active: page == 1 }"
                     @click.prevent="changePage(1)">1</a>
 
@@ -35,7 +35,7 @@
                     @click.prevent="leapForward">...</a>
 
                 <a href="#"
-                    class="btn number"
+                    class="btn page"
                     :class="{ active: page == lastPage }"
                     @click.prevent="changePage(lastPage)"
                     v-text="lastPage"></a>
@@ -186,5 +186,11 @@ export default {
 <style scoped>
 .page-input {
     width: 5rem;
+    margin-left: 1rem;
+}
+
+.nav {
+    display: flex;
+    align-items: center;
 }
 </style>
