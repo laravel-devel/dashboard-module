@@ -96,7 +96,7 @@
                             </a>
                         </td>
                     </tr>
-                    <tr v-for="(item, index) in items" :key="index">
+                    <tr v-for="(item, index) in filteredItems" :key="index">
                         <td v-if="bulkActionsOn && hasBulkActions" class="bulk-actions">
                             <v-form-el :inline="true"
                                 :field="{
@@ -150,7 +150,7 @@
                         </td>
                     </tr>
 
-                    <tr v-if="!items.length" class="m-1 text-center">
+                    <tr v-if="!filteredItems.length" class="m-1 text-center">
                         <td :colspan="columnsCount">
                             NO DATA
                         </td>
@@ -281,6 +281,7 @@ export default {
             processing: false,
             tableData: [],
             items: [],
+            filteredItems: [],
             selectedItems: {},
             selectedItemsAllPage: false,
             page: 1,
@@ -593,18 +594,8 @@ export default {
                 this.tableData = this.localData;
                 this.items = this.localData.data;
                 
-                if (this.clientSideSorting) {
-                    this.sortItemsClientSide();
-                }
-
-                if (this.clientSidePagination) {
-                    this.tableData = Object.assign(
-                        this.tableData,
-                        this.makePaginationData(this.items, this.page, this.itemsPerPage)
-                    );
-
-                    this.items = this.paginate(this.tableData, this.page);
-                }
+                // Filter/sort/paginate items client-side as/if required
+                this.filterItemsClientSide();  
 
                 this.processing = false;
 
@@ -623,19 +614,9 @@ export default {
 
                         return;
                     }
-                    
-                    if (this.clientSideSorting) {
-                        this.sortItemsClientSide();
-                    }
 
-                    if (this.clientSidePagination) {
-                        this.tableData = Object.assign(
-                            this.tableData,
-                            this.makePaginationData(this.items, this.page, this.itemsPerPage)
-                        );
-
-                        this.items = this.paginate(this.tableData, this.page);
-                    }
+                    // Filter/sort/paginate items client-side as/if required
+                    this.filterItemsClientSide();
 
                     this.processing = false;
                 });
@@ -662,7 +643,7 @@ export default {
             this.sort = key;
 
             if (this.clientSideSorting) {
-                this.sortItemsClientSide();
+                this.filterItemsClientSide();
             } else {
                 this.fetchData();
             }
@@ -690,6 +671,26 @@ export default {
             }
 
             return 0;
+        },
+
+        filterItemsClientSide() {
+            // Client-side sorting
+            if (this.clientSideSorting) {
+                this.sortItemsClientSide();
+            }
+
+            // Client-side pagination
+            if (this.clientSidePagination) {
+                this.tableData = Object.assign(
+                    this.tableData,
+                    this.makePaginationData(this.items, this.page, this.itemsPerPage)
+                );
+
+                this.filteredItems = this.paginate(this.items, this.tableData, this.page);
+            } else {
+                // Server-side pagination
+                this.filteredItems = this.items.map(item => item);
+            }
         },
 
         formatted(field, item, key) {
@@ -952,8 +953,8 @@ export default {
             };
         },
 
-        paginate(tableData, page) {
-            return tableData.data.slice(tableData.from - 1, tableData.to);
+        paginate(items, tableData, page) {
+            return items.slice(tableData.from - 1, tableData.to);
         },
     }
 }
