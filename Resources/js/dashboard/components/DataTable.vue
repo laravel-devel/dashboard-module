@@ -713,7 +713,7 @@ export default {
                 value = item[key];
             }
 
-            value = value ? value : '-';
+            value = (value !== null && value !== undefined) ? value : '-';
 
             if (field.format) {
                 // Sometimes a relationship that is referenced in the format
