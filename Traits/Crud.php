@@ -233,12 +233,29 @@ trait Crud
     }
 
     /**
+     * Set datatable for the current request.
+     *
+     * @return void
+     */
+    protected function withDatatable()
+    {
+        $this->setDatatable([
+            // Columns
+        ], [
+            // Actions
+        ], [
+            // Filters
+        ]);
+    }
+
+    /**
      * API. Return a resource collection.
      *
      * @return Response
      */
     public function get(Request $request)
     {
+        $this->withDatatable();
         $table = $this->getModelTable();
 
         $query = $this->model()::select("{$table}.*")
@@ -588,7 +605,7 @@ trait Crud
         } else {
             $query->whereIn('product_id', $ids);
         }
-        
+
         return $query;
     }
 }
