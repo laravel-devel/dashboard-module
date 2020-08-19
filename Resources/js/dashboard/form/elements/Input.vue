@@ -16,5 +16,11 @@
 <script>
 export default {
     props: ['attrs', 'value'],
+
+    created() {
+        if (this.value !== undefined) {
+            this.$emit('input', this.value);
+        }
+    },
 }
 </script>
