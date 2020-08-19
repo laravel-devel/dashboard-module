@@ -160,32 +160,26 @@ export default {
 
         // Select selected options
         if (this.value) {
+            // console.log(this.value);
             const value = Array.isArray(this.value) ? this.value : [this.value];
 
             for (let item of value) {
                 if (typeof item !== 'object') {
-                    item = this.options.find(i => i[this.idField] === item);
+                    item = this.options.find(i => i[this.idField] == item);
                     
                     if (!item) {
                         continue;
                     }
                 }
 
-                // Push a clone of the object, not the original object!
-                this.selectedOptions.push(
-                    this.formatOption(Object.assign({}, item))
-                );
+                this.selectOption(item);
             }
         } else if (this.attrs.required) {
             if (this.options.length) {
-                // Push a clone of the object, not the original object!
-                this.selectedOptions.push(
-                    this.formatOption(Object.assign({}, this.options[0]))
-                )
+                this.selectOption(this.options[0]);
             }
         }
 
-        this.onSelectionsUpdated();
         this.calculateAvailableOptions();
         this.filterOptions();
     },
