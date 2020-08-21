@@ -136,7 +136,7 @@ export default {
         },
 
         val() {
-            if (this.attrs.value) {
+            if (this.attrs.value !== undefined) {
                 return this.attrs.value;
             }
 
@@ -146,7 +146,7 @@ export default {
                         ? this.$parent.values[this.attrs.name]
                         : this.value
                 )
-                : this.value ? this.value : undefined;
+                : this.value !== undefined ? this.value : undefined;
         },
     },
 
