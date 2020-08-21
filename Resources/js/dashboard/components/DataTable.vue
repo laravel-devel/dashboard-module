@@ -713,8 +713,6 @@ export default {
                 value = item[key];
             }
 
-            value = (value !== null && value !== undefined) ? value : '-';
-
             if (field.format) {
                 // Sometimes a relationship that is referenced in the format
                 // string is missing
@@ -723,8 +721,10 @@ export default {
                 } catch (error) {
                     return '-';
                 }
+            } else {
+                value = (value !== null && value !== undefined) ? value : '-';
             }
-            
+
             return value;
         },
 
