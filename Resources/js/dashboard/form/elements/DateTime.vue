@@ -41,6 +41,12 @@ export default {
     watch: {
         model(newVal) {
             this.$emit('input', this.formattedValue);
+        },
+
+        value(newVal) {
+            this.model = (typeof newVal === 'string') 
+                ? new Date(newVal)
+                : newVal;
         }
     },
 
