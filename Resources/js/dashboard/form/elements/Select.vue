@@ -172,7 +172,9 @@ export default {
                     }
                 }
 
-                this.selectOption(item);
+                if (item) {
+                    this.selectOption(item);
+                }
             }
         } else if (this.attrs.required) {
             if (this.options.length) {
@@ -268,6 +270,10 @@ export default {
         },
 
         selectOption(option) {
+            if (!option) {
+                return;
+            }
+
             // Group names cannot be selected
             if (option.groupName) {
                 return;
