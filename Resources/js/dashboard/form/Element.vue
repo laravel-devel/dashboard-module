@@ -10,6 +10,11 @@
                 :value="val"
                 @input="onInput"></v-fel-input>
 
+            <v-fel-textarea v-else-if="field.type === 'textarea'"
+                :attrs="attrs"
+                :value="val"
+                @input="onInput"></v-fel-textarea>
+
             <v-fel-checkbox v-else-if="field.type === 'checkbox'"
                 :attrs="attrs"
                 :value="val"
@@ -58,6 +63,7 @@
 
 <script>
 import Input from './elements/Input';
+import Textarea from './elements/Textarea';
 import Checkbox from './elements/Checkbox';
 import Switch from './elements/Switch';
 import Link from './elements/Link';
@@ -70,6 +76,7 @@ import RadioGroup from './elements/RadioGroup';
 export default {
     components: {
         'v-fel-input': Input,
+        'v-fel-textarea': Textarea,
         'v-fel-checkbox': Checkbox,
         'v-fel-switch': Switch,
         'v-fel-link': Link,
