@@ -12,7 +12,7 @@
                     v-model="search"
                     ref="input"
                     :disabled="attrs.disabled"
-                    @focus="open = true">
+                    @focus="openOnFocus">
 
                 <div v-else class="form-element" ref="input" @click="toggleOpen">
                     <span v-if="selectedOptions.length > 0" class="value">
@@ -115,6 +115,7 @@ export default {
             idField: '',
             textField: '',
             multipleChoice: false,
+            limit: this.attrs.limit ? this.attrs.limit : 0,
             open: false,
             search: '',
             selections: [],
@@ -123,9 +124,17 @@ export default {
 
     computed: {
         placeholder() {
-            return this.attrs.placeholder ? this.attrs.placeholder : (
-                this.multipleChoice ? 'Start typing...' : ' - '
-            );
+            let defaultPlaceholder = ' - ';
+
+            if (this.multipleChoice) {
+                defaultPlaceholder = (this.limitLeft() > 0)
+                    ? `Start typing... (you can select ${this.limitLeft()} more option(s))`
+                    : "You can't select more options"
+            }
+
+            return this.attrs.placeholder
+                ? this.attrs.placeholder
+                : defaultPlaceholder;
         }
     },
 
@@ -264,8 +273,14 @@ export default {
         },
 
         toggleOpen() {
-            if (!this.attrs.disabled) {
+            if (!this.attrs.disabled && this.limitLeft() > 0) {
                 this.open = ! this.open;
+            }
+        },
+
+        openOnFocus() {
+            if (!this.attrs.disabled && this.limitLeft() > 0) {
+                this.open = true;
             }
         },
 
@@ -279,6 +294,13 @@ export default {
                 return;
             }
 
+            // If multi-choice and the limit has been reached - don't select new
+            // options
+            if (this.limitReached()) {
+                return;
+            }
+
+            // If not multi-choice - unselect the currently selected option
             if (!this.multipleChoice) {
                 this.selectedOptions.splice(0);
             }
@@ -358,7 +380,33 @@ export default {
                     this.selectedOptions.push(Object.assign({}, item));
                 }
             }
-        }
+        },
+
+        /**
+         * Whether the selected options limit has been reached
+         * (for multi-select mode only)
+         * 
+         * @return boolean
+         */
+        limitReached() {
+            return this.multipleChoice
+                && this.limit > 0
+                && this.selectedOptions.length == this.limit;
+        },
+
+        /**
+         * How many more options can be selected until the limit will be reached
+         * (for multi-select mode only)
+         * 
+         * @return integer
+         */
+        limitLeft() {
+            if (!this.multipleChoice) {
+                return 1;
+            }
+
+            return this.limit - this.selectedOptions.length;
+        },
     }
 }
 </script>
