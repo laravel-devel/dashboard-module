@@ -80,14 +80,7 @@
                 :value="selection">
         </template>
 
-        <input v-else-if="multipleChoice && selections.length == 0"
-            type="hidden"
-            :name="`${attrs.name}[]`"
-            autocomplete="off"
-            value=""
-            v-model="selections">
-
-        <input v-else
+        <input v-else-if="!multipleChoice && selections.length > 0"
             type="hidden"
             :name="`${attrs.name}`"
             autocomplete="off"
