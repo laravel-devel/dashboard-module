@@ -50,7 +50,7 @@
             <div class="flex flex-align-center top-panel-extra">
                 <slot name="top-panel"></slot>
 
-                <a v-if="hasActions && createAction && allowedTo('create')"
+                <a v-if="createAction && allowedTo('create')"
                     :href="createAction.url"
                     class="btn">Add</a>
             </div>
