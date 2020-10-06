@@ -3,6 +3,7 @@
 namespace Modules\DevelDashboard\Traits;
 
 use Doctrine\DBAL\DBALException;
+use Doctrine\DBAL\Schema\SchemaException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
