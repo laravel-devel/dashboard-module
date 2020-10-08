@@ -3,6 +3,10 @@
         <div v-if="this.filterFields.length > 0">
             <p class="mb-1">
                 <strong>Filter</strong>
+
+                <a href="#" class="btn ml-1" @click.prevent="resetFilters">
+                    Reset
+                </a>
             </p>
 
             <div class="flex flex-wrap space-between mb-1">
@@ -955,6 +959,22 @@ export default {
 
         paginate(items, tableData, page) {
             return items.slice(tableData.from - 1, tableData.to);
+        },
+
+        resetFilters() {
+            for (let filter of this.filterFields) {
+                const defaultValues = this.filters[filter.name];
+                
+                if (!defaultValues) {
+                    continue;
+                }
+
+                const defaultValue = defaultValues.value
+                    || (defaultValues.attrs ? defaultValues.attrs.value : null)
+                    || null;
+
+                this.$set(filter, 'value', defaultValue);
+            }
         },
     }
 }
