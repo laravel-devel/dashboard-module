@@ -2,7 +2,7 @@
     <div class="datatable">
         <div v-if="this.filterFields.length > 0">
             <p class="mb-1">
-                <strong>Filter</strong>
+                <strong>Filters</strong>
 
                 <a href="#" class="btn ml-1" @click.prevent="resetFilters">
                     Reset

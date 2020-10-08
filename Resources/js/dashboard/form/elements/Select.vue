@@ -364,6 +364,7 @@ export default {
             this.selections = newValue;
 
             this.selectedOptions.splice(0);
+            this.search = '';
 
             for (let option of this.selections) {
                 const item = this.options.find(item => item[this.idField] === option);
@@ -371,6 +372,11 @@ export default {
                 if (item) {
                     // Push a clone of the object, not the original object!
                     this.selectedOptions.push(Object.assign({}, item));
+
+                    // Set the search text
+                    if (!this.multipleChoice && this.attrs.search) {
+                        this.search = item[this.textField];
+                    }
                 }
             }
         },
