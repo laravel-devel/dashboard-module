@@ -58,29 +58,57 @@ export default {
                     }
                 }]
             },
+
+            formattedValue: '',
+            emitValue: true,
         };
     },
 
     mounted() {
         // Set the default value
-        this.model = [new Date(this.value), new Date()];
+        this.setFromValue(this.value);
     },
 
     watch: {
         model(newVal) {
-            this.$emit('input', this.formattedValue);
-        }
-    },
+            this.formattedValue = this.formatValue(newVal);
 
-    computed: {
-        formattedValue() {
-            return this.formatDate(this.model[0]) + '|' + this.formatDate(this.model[1]);
+            if (this.emitValue) {
+                this.$emit('input', this.formattedValue);
+            } else {
+                this.emitValue = true;
+            }
+        },
+
+        value(newVal) {
+            this.emitValue = false;
+
+            this.setFromValue(newVal);
         }
     },
 
     methods: {
         formatDate(value) {
             return moment(value).format('Y-MM-DD');
+        },
+
+        setFromValue(value) {
+            const values = value.split('|');
+
+            this.model = [
+                new Date(values[0]),
+                values[1] ? new Date(values[1]) : new Date(),
+            ];
+        },
+
+        formatValue(value) {
+            if (value[1]) {
+                return this.formatDate(value[0])
+                    + '|'
+                    + this.formatDate(value[1]);
+            } else {
+                return this.formatDate(value[0]);
+            }
         }
     }
 }
