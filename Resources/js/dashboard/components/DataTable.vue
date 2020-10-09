@@ -9,8 +9,14 @@
                 </a>
             </p>
 
-            <div class="flex flex-wrap space-between mb-1">
-                <div v-for="(filter, index) in this.filterFields" :key="index" class="mr-05 ml-05 mb-1">
+            <div class="flex flex-wrap space-between"
+                :class="{ 'mb-1': !hasHiddenFilters }"
+            >
+                <div v-for="(filter, index) in this.filterFields"
+                    :key="index"
+                    class="filter mr-05 ml-05 mb-1"
+                    :class="{ 'filter-hidden': filter.hidden && !showHiddenFilters }"
+                >
                     <div class="mb-05 text-semibold">{{ filter.label }}:</div>
 
                     <v-form-el :inline="true"
@@ -23,6 +29,12 @@
                         class="filter-field"></v-form-el>
                 </div>
             </div>
+
+            <p v-if="hasHiddenFilters" class="mb-1">
+                <a href="#" class="btn" @click.prevent="toggleHiddenFilters">
+                    {{ showHiddenFilters ? 'Less Filters' : 'More Filters' }}
+                </a>
+            </p>
         </div>
 
         <div class="flex pb-1">
@@ -276,6 +288,10 @@ export default {
             return Object.keys(this.visibleFields).length
                 + (this.bulkActionsOn && this.hasBulkActions ? 1 : 0)
                 + (this.hasActions ? 1 : 0)
+        },
+
+        hasHiddenFilters() {
+            return this.filterFields.filter(item => item.hidden).length > 0;
         }
     },
 
@@ -294,7 +310,9 @@ export default {
             searchQuery: '',
             searchTimeout: null,
             visibleFields: {},
+
             filterFields: [],
+            showHiddenFilters: false,
 
             allActions: {
                 single: [],
@@ -438,6 +456,7 @@ export default {
                         value: (field.attrs && field.attrs.required)
                             ? [options[0][idField]]
                             : null,
+                        hidden: field.hidden || false,
                     });
                 } else {
                     this.filterFields.push({
@@ -446,6 +465,7 @@ export default {
                         type: field.type ? field.type : 'text',
                         attrs: field.attrs ? field.attrs : {},
                         value: null,
+                        hidden: field.hidden || false,
                     });
                 }
             }
@@ -976,6 +996,10 @@ export default {
                 this.$set(filter, 'value', defaultValue);
             }
         },
+
+        toggleHiddenFilters() {
+            this.showHiddenFilters = !this.showHiddenFilters;
+        }
     }
 }
 </script>

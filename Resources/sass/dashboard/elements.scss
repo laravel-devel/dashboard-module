@@ -90,6 +90,16 @@
         min-width: 13rem;
     }
 
+    .filter {
+        transition: opacity .3s;
+
+        &.filter-hidden {
+            position: absolute;
+            top: -100px;
+            opacity: 0;
+        }
+    }
+
     .bulk-action-select {
         min-width: 13rem;
     }
