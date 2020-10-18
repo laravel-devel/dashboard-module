@@ -79,6 +79,18 @@
         padding: .25rem .5rem;
         font-size: .8rem;
     }
+
+    &.success {
+        background-color: $success;
+        &:hover { background-color: $successHover; }
+        &[disabled] { background-color: $successInactive; }
+    }
+
+    &.danger {
+        background-color: $danger;
+        &:hover { background-color: $dangerHover; }
+        &[disabled] { background-color: $dangerInactive; }
+    }
 }
 
 .datatable {
