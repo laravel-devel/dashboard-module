@@ -816,7 +816,11 @@ export default {
             // A non-AJAX action - just go to the URL
             if (!action.ajax) {
                 if (url) {
-                    window.location = url;
+                    if (action.openInTab) {
+                        window.open(url);
+                    } else {
+                        window.location = url;
+                    }
                 }
 
                 return;
