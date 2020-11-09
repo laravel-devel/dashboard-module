@@ -767,7 +767,7 @@ export default {
                 return `${url}?search=${this.searchQuery}${filters}`;
             }
 
-            const params = url.match(new RegExp(':([a-zA-Z].*?)(/|$)', 'g'));
+            const params = url.match(new RegExp(':([a-zA-Z].*?)[^\/|$|\.]*', 'g'));
 
             if (params) {
                 for (let param of params) {
