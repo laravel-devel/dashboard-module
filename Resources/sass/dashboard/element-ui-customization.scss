@@ -9,3 +9,8 @@
 .el-date-editor--daterange.el-input__inner {
     width: auto !important;
 }
+
+.el-dropdown-menu {
+    max-height: 75vh;
+    overflow-y: auto;
+}
