@@ -20,9 +20,6 @@ class BaseSettingsController extends Controller
 
     public function __construct()
     {
-        $this->setMeta('title', 'Dashboard');
-        $this->setMeta('title', 'Settings');
-
         // Input fields for the form
         foreach ($this->groups as $group => $keys) {
             $groupName = ucwords(str_replace('_', ' ', $group));
@@ -62,6 +59,9 @@ class BaseSettingsController extends Controller
      */
     public function edit()
     {
+        $this->setMeta('title', 'Dashboard');
+        $this->setMeta('title', 'Settings');
+
         return view('develdashboard::settings.edit', [
             'form' => $this->form,
             'values' => $this->values,
