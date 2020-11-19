@@ -112,7 +112,10 @@
                             </a>
                         </td>
                     </tr>
-                    <tr v-for="(item, index) in filteredItems" :key="index">
+                    <tr v-for="(item, index) in filteredItems"
+                        :key="index"
+                        :class="{ 'text-bold': item._style_text_bold, }"
+                    >
                         <td v-if="bulkActionsOn && hasBulkActions" class="bulk-actions">
                             <v-form-el :inline="true"
                                 :field="{
