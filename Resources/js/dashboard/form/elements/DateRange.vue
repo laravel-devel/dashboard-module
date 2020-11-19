@@ -4,7 +4,7 @@
 
         <el-date-picker
             v-model="model"
-            type="daterange"
+            :type="withTime ? 'datetimerange' : 'daterange'"
             align="right"
             unlink-panels
             range-separator="-"
@@ -25,7 +25,7 @@
 
 <script>
 export default {
-    props: ['attrs', 'value'],
+    props: ['attrs', 'value', 'withTime'],
 
     data() {
         return {
@@ -89,7 +89,9 @@ export default {
 
     methods: {
         formatDate(value) {
-            return moment(value).format('Y-MM-DD');
+            return this.withTime
+                ? moment(value).format('Y-MM-DD HH:mm:ss')
+                : moment(value).format('Y-MM-DD');
         },
 
         setFromValue(value) {

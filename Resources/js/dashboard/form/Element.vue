@@ -47,6 +47,13 @@
             <v-fel-daterange v-else-if="field.type === 'daterange'"
                 :attrs="attrs"
                 :value="val"
+                :with-time="false"
+                @input="onInput"></v-fel-daterange>
+
+            <v-fel-daterange v-else-if="field.type === 'datetimerange'"
+                :attrs="attrs"
+                :value="val"
+                :with-time="true"
                 @input="onInput"></v-fel-daterange>
 
             <v-fel-file v-else-if="field.type === 'file'"
