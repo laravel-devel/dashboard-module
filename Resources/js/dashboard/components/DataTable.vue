@@ -114,7 +114,13 @@
                     </tr>
                     <tr v-for="(item, index) in filteredItems"
                         :key="index"
-                        :class="{ 'text-bold': item._style_text_bold, }"
+                        :class="{
+                            'text-bold': item._style_text_bold,
+                            'text-semibold': item._style_text_semibold,
+                            'text-primary': item._style_text_primary,
+                            'text-danger': item._style_text_danger,
+                            'text-success': item._style_text_success,
+                        }"
                     >
                         <td v-if="bulkActionsOn && hasBulkActions" class="bulk-actions">
                             <v-form-el :inline="true"
