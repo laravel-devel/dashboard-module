@@ -121,7 +121,7 @@ export default {
 
             if (this.multipleChoice) {
                 defaultPlaceholder = (this.limitLeft() > 0)
-                    ? `Start typing... (you can select ${this.limitLeft()} more option(s))`
+                    ? `Start typing... (you can select ${this.limitLeft() === true ? '' : this.limitLeft()} more option(s))`
                     : "You can't select more options"
             }
 
@@ -402,6 +402,10 @@ export default {
         limitLeft() {
             if (!this.multipleChoice) {
                 return 1;
+            }
+
+            if (this.limit === 0) {
+                return true;
             }
 
             return this.limit - this.selectedOptions.length;

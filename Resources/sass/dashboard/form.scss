@@ -308,6 +308,7 @@
 
         .select-selected-items {
             display: flex;
+            flex-wrap: wrap;
 
             .select-seleced-item {
                 display: flex;
