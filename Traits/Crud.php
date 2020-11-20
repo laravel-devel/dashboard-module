@@ -250,6 +250,19 @@ trait Crud
     }
 
     /**
+     * Set form for the current request.
+     *
+     * @return void
+     */
+    protected function withForm()
+    {
+        $this->setForm([
+            'Main' => [
+            ],
+        ]);
+    }
+
+    /**
      * API. Return a resource collection.
      *
      * @return Response
