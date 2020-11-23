@@ -353,26 +353,14 @@ export default {
 
     watch: {
         searchQuery() {
-            clearTimeout(this.searchTimeout);
-
-            this.searchTimeout = setTimeout(() => {
-                this.$set(this.selectedItems, 'all', false);
-
-                this.fetchData();
-            }, 250);
+            this.onSearchQueryChanged();
         },
 
         filterFields: {
             deep: true,
 
             handler: function (newVal, oldVal) {
-                if (!this.initialized) {
-                    return;
-                }
-
-                this.$set(this.selectedItems, 'all', false);
-                
-                this.fetchData();
+                this.onFiltersChanged(newVal, oldVal);
             }
         },
 
@@ -380,16 +368,7 @@ export default {
             deep: true,
 
             handler: function (newVal, oldVal) {
-                let selected = Object.keys(this.selectedItems).filter(key => {
-                    if (key === 'all') {
-                        return false;
-                    }
-                    
-                    return this.selectedItems[key];
-                });
-
-                this.selectedItemsAllPage = (selected.length === this.items.length
-                    && this.items.length > 0);
+                this.onSelectedItemsChanged(newVal, oldVal);
             }
         },
 
@@ -397,7 +376,7 @@ export default {
             deep: true,
 
             handler: function () {
-                this.$emit('data-updated', this.tableData);
+                this.onTableDataChanged();
             }
         }
      },
@@ -595,6 +574,44 @@ export default {
                     });
                 }
             }
+        },
+
+        onSearchQueryChanged() {
+            clearTimeout(this.searchTimeout);
+
+            this.searchTimeout = setTimeout(() => {
+                this.$set(this.selectedItems, 'all', false);
+
+                this.fetchData();
+            }, 250);
+        },
+
+        onFiltersChanged(newVal, oldVal) {
+            if (!this.initialized) {
+                return;
+            }
+            console.log('ORIGINAL');
+
+            this.$set(this.selectedItems, 'all', false);
+            
+            this.fetchData();
+        },
+
+        onSelectedItemsChanged(newVal, oldVal) {
+            let selected = Object.keys(this.selectedItems).filter(key => {
+                if (key === 'all') {
+                    return false;
+                }
+                
+                return this.selectedItems[key];
+            });
+
+            this.selectedItemsAllPage = (selected.length === this.items.length
+                && this.items.length > 0);
+        },
+
+        onTableDataChanged() {
+            this.$emit('data-updated', this.tableData);
         },
 
         makeFiltersQuery() {
