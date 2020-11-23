@@ -590,7 +590,6 @@ export default {
             if (!this.initialized) {
                 return;
             }
-            console.log('ORIGINAL');
 
             this.$set(this.selectedItems, 'all', false);
             
