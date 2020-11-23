@@ -11,6 +11,7 @@
             start-placeholder="Start date"
             end-placeholder="End date"
             :picker-options="pickerOptions"
+            :default-time="['00:00:00', '23:59:59']"
             :disabled="attrs.disabled"
             class="fullwidth-force">
         </el-date-picker>
@@ -35,25 +36,28 @@ export default {
                 shortcuts: [{
                     text: 'Last week',
                     onClick(picker) {
-                        const end = new Date();
+                        const end = new Date().setHours(23, 59, 59, 999);
                         const start = new Date();
                         start.setTime(start.getTime() - 3600 * 1000 * 24 * 7);
+                        start.setHours(0, 0, 0, 0);
                         picker.$emit('pick', [start, end]);
                     }
                 }, {
                     text: 'Last month',
                     onClick(picker) {
-                        const end = new Date();
+                        const end = new Date().setHours(23, 59, 59, 999);
                         const start = new Date();
                         start.setTime(start.getTime() - 3600 * 1000 * 24 * 30);
+                        start.setHours(0, 0, 0, 0);
                         picker.$emit('pick', [start, end]);
                     }
                 }, {
                     text: 'Last 3 months',
                     onClick(picker) {
-                        const end = new Date();
+                        const end = new Date().setHours(23, 59, 59, 999);
                         const start = new Date();
                         start.setTime(start.getTime() - 3600 * 1000 * 24 * 90);
+                        start.setHours(0, 0, 0, 0);
                         picker.$emit('pick', [start, end]);
                     }
                 }]
