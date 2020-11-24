@@ -38,7 +38,7 @@
         </div>
 
         <div class="flex pb-1">
-            <div class="flex flex-align-center flex-1">
+            <div class="flex flex-align-end flex-1">
                 <div v-if="bulkActionsOn && hasBulkActions" class="mr-1">
                     <v-form-el :inline="true"
                         :field="{
@@ -63,7 +63,7 @@
                 </div>
             </div>
 
-            <div class="flex flex-align-center top-panel-extra">
+            <div class="flex flex-align-end top-panel-extra">
                 <slot name="top-panel"></slot>
 
                 <a v-if="createAction && allowedTo('create')"
