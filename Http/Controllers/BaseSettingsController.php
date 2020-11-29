@@ -39,7 +39,7 @@ class BaseSettingsController extends Controller
 
                 // A form field
                 $this->form[$groupName][] = [
-                    'type' => 'text',
+                    'type' => $setting->field_type,
                     'name' => "$key",
                     'label' => isset($setting)
                         ? $setting->name
@@ -81,6 +81,16 @@ class BaseSettingsController extends Controller
             }
 
             Settings::set($key, $value);
+        }
+
+        // Boolean values are a special case. If they are checkboxes/switches,
+        // then the field will not be present when it's set to "false".
+        foreach ($this->groups as $group => $keys) {
+            foreach ($keys as $key) {
+                if (!$request->has("{$group}-{$key}")) {
+                    Settings::set("{$group}-{$key}", 'false');
+                }
+            }
         }
 
         return response()->json([
