@@ -87,8 +87,16 @@ class BaseSettingsController extends Controller
         // then the field will not be present when it's set to "false".
         foreach ($this->groups as $group => $keys) {
             foreach ($keys as $key) {
-                if (!$request->has("{$group}-{$key}")) {
-                    Settings::set("{$group}-{$key}", 'false');
+                $setting = Settings::where('group', $group)
+                    ->where('key', $key)
+                    ->where('type', 'boolean')
+                    ->exists();
+
+                if ($setting) {
+                    $key = "{$group}-{$key}";
+                    $value = $request->has($key) ? 'true' : 'false';
+
+                    Settings::set($key, $value);
                 }
             }
         }
