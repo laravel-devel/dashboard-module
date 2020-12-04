@@ -28,7 +28,7 @@ export default {
             model: '',
 
             pickerOptions: {
-                //
+                firstDayOfWeek: 1,
             },
         };
     },

@@ -60,7 +60,8 @@ export default {
                         start.setHours(0, 0, 0, 0);
                         picker.$emit('pick', [start, end]);
                     }
-                }]
+                }],
+                firstDayOfWeek: 1,
             },
 
             formattedValue: '',
