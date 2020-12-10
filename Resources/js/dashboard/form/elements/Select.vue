@@ -99,9 +99,13 @@ export default {
 
         return {
             collectionName: collectionName,
-            options: (this.collections && this.collections[collectionName])
-                ? this.collections[collectionName]
-                : [],
+            options: this.attrs.options
+                ? this.attrs.options
+                : (
+                    (this.collections && this.collections[collectionName])
+                    ? this.collections[collectionName]
+                    : []
+                ),
             selectedOptions: [],
             availableOptions: [],
             filteredOptions: [],
@@ -220,7 +224,7 @@ export default {
                 ? oldVal[this.collectionName]
                 : [];
 
-            if (newVal === oldVal) {
+            if (newVal === oldVal || this.attrs.options) {
                 return;
             }
 
@@ -228,6 +232,18 @@ export default {
 
             this.calculateAvailableOptions();
             this.filterOptions();
+        },
+
+        attrs: {
+            deep: true,
+            handler: function (newVal, oldVal) {
+                if (newVal.options !== oldVal.options) {
+                    this.options = newVal.options ? newVal.options : [];
+
+                    this.calculateAvailableOptions();
+                    this.filterOptions();
+                }
+            }
         },
     },
 
