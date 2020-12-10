@@ -14,3 +14,11 @@
     max-height: 75vh;
     overflow-y: auto;
 }
+
+.el-tooltip__popper {
+    white-space: pre-wrap;
+    max-width: 90%;
+    max-height: 90%;
+    overflow: hidden;
+    overflow-y: auto;
+}
