@@ -21,4 +21,8 @@
     max-height: 90%;
     overflow: hidden;
     overflow-y: auto;
+
+    .popper__arrow {
+        display: none !important;
+    }
 }
