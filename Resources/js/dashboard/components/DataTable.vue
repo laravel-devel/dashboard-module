@@ -1,5 +1,7 @@
 <template>
     <div class="datatable">
+        <slot name="before"></slot>
+
         <div v-if="this.filterFields.length > 0">
             <p class="mb-1">
                 <strong>Filters</strong>
@@ -133,7 +135,16 @@
 
                         <td v-for="key in Object.keys(visibleFields)"
                             :key="key"
-                            v-html="formatted(fields[key], item, key)"></td>
+                        >
+                            <slot name="cell"
+                                :field="key"
+                                :item="item"
+                                :original-value="item[key]"
+                                :formatted-value="formatted(fields[key], item, key)"
+                            >
+                                <div v-html="formatted(fields[key], item, key)"></div>
+                            </slot>
+                        </td>
 
                         <td v-if="hasActions" class="actions">
                             <template v-for="(action, index) in allActions.single">
@@ -191,6 +202,8 @@
         <v-paginator :page="page"
             :info="tableData"
             @pageChanged="onPageChanged"></v-paginator>
+        
+        <slot name="after"></slot>
     </div>
 </template>
 
