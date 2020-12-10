@@ -38,13 +38,19 @@ class BaseSettingsController extends Controller
                 $setting = Settings::getObject($key);
 
                 // A form field
-                $this->form[$groupName][] = [
+                $field = [
                     'type' => $setting->field_type,
                     'name' => "$key",
                     'label' => isset($setting)
                         ? $setting->name
                         : Settings::keyToName("$key"),
                 ];
+
+                // Additional field options, including "attrs"
+                $this->form[$groupName][] = array_merge(
+                    $field,
+                    (array) ($setting->field_options ?: [])
+                );
 
                 // A value for the field
                 $this->values[$key] = Settings::read($key);
