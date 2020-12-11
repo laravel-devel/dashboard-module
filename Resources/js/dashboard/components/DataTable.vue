@@ -288,6 +288,11 @@ export default {
                 return {};
             },
         },
+
+        urlMode: {
+            type: Boolean,
+            default: true,
+        },
     },
 
     computed: {
@@ -353,10 +358,12 @@ export default {
  
     created() {
         this.parseFields();
-        this.parseDefaultSorting();
+        this.parsePageNumber();
+        this.parseSortRule();
         this.parseFilters();
         this.parseActions();
         this.parseBulkActions();
+        this.registerEvents();
 
         this.$nextTick(() => {
             this.fetchData();
@@ -395,6 +402,26 @@ export default {
      },
 
     methods: {
+        registerEvents() {
+            if (this.urlMode) {
+                window.addEventListener('popstate', (event) => {
+                    console.log('PoP!');
+
+                    // Block watchers that re-fetch data
+                    this.initialized = false;
+
+                    this.parseSortRule();
+                    this.parsePageNumber();
+                    this.parseFilters();
+                    
+                    this.$nextTick(() => {
+                        this.fetchData();
+                        this.initialized = true;
+                    });
+                });
+            }
+        },
+
         parseFields() {
             for (let key of Object.keys(this.fields)) {
                 if (key === '_primary_key') {
@@ -407,12 +434,35 @@ export default {
             }
         },
 
-        parseDefaultSorting() {
-            if (!this.sortBy) {
+        parsePageNumber() {
+            const queryParams = new URL(window.location).searchParams;
+
+            let page = queryParams.get('page')
+                ? parseInt(queryParams.get('page'))
+                : 1;
+            
+            this.page = (!isNaN(page) && page > 0) ? page : 1;
+        },
+
+        parseSortRule() {
+            let sortString;
+            const queryParams = new URL(window.location).searchParams;
+
+            if (this.urlMode && queryParams.get('sort')) {
+                sortString = queryParams.get('sort');
+            } else {
+                sortString = this.sortBy;
+            }
+
+            if (!sortString) {
                 return;
             }
 
-            let parts = this.sortBy.split('|');
+            let parts = sortString.split('|');
+
+            if (parts.length < 2) {
+                return;
+            }
 
             this.sort = parts[0];
             this.sortAsc = parts.length === 1
@@ -424,8 +474,23 @@ export default {
                 return;
             }
 
+            this.filterFields = [];
+
+            const queryParams = new URL(window.location).searchParams;
+
             for (let name of Object.keys(this.filters)) {
                 const field = this.filters[name];
+                let value;
+
+                let filterName = 'f_' + name.replace(/\./, '__');
+
+                if (this.urlMode && queryParams.has(filterName)) {
+                    value = this.parseFilterValue(queryParams.get(filterName));
+
+                    if (field.attrs && field.attrs.hasOwnProperty('value')) {
+                        field.attrs.value = value;
+                    }
+                }
 
                 if (field.options) {
                     let options = [];
@@ -442,6 +507,12 @@ export default {
 
                     const idField = field.attrs ? field.attrs.idField : name;
 
+                    if (value === undefined) {
+                        value = (field.attrs && field.attrs.required)
+                            ? [options[0][idField]]
+                            : null;
+                    }
+
                     this.filterFields.push({
                         name: name,
                         label: field.name,
@@ -454,9 +525,7 @@ export default {
                                 textField: name,
                                 collection: name,
                             },
-                        value: (field.attrs && field.attrs.required)
-                            ? [options[0][idField]]
-                            : null,
+                        value: value,
                         hidden: field.hidden || false,
                     });
                 } else {
@@ -465,11 +534,21 @@ export default {
                         label: field.name,
                         type: field.type ? field.type : 'text',
                         attrs: field.attrs ? field.attrs : {},
-                        value: null,
+                        value: value,
                         hidden: field.hidden || false,
                     });
                 }
             }
+        },
+
+        parseFilterValue(value) {
+            if (value.toLowerCase() === 'true') {
+                return true;
+            } else if (value.toLowerCase() === 'false') {
+                return false;
+            }
+
+            return value;
         },
 
         parseActions() {
@@ -605,6 +684,8 @@ export default {
             }
 
             this.$set(this.selectedItems, 'all', false);
+
+            this.updateUrl(this.makeFiltersQuery());
             
             this.fetchData();
         },
@@ -691,6 +772,8 @@ export default {
 
             this.page = page;
 
+            this.updateUrl({ page: page });
+
             this.fetchData();
 
             this.scrollToTop();
@@ -703,6 +786,8 @@ export default {
 
             this.sortAsc = (this.sort !== key) ? true : ! this.sortAsc;
             this.sort = key;
+
+            this.updateUrl({ sort: `${key}|${this.sortAsc ? 'asc' : 'desc'}` });
 
             if (this.clientSideSorting) {
                 this.filterItemsClientSide();
@@ -1037,11 +1122,72 @@ export default {
 
                 this.$set(filter, 'value', defaultValue);
             }
+
+            this.resetFiltersInUrl();
         },
 
         toggleHiddenFilters() {
             this.showHiddenFilters = !this.showHiddenFilters;
-        }
+        },
+
+        updateUrl(updates) {
+            if (!this.urlMode) {
+                return;
+            }
+
+            // If updates were sent in the form of a query string
+            if (typeof updates === 'string') {
+                const pairs = updates.split('&');
+                updates = {};
+
+                for (let pair of pairs) {
+                    if (!pair) {
+                        continue;
+                    }
+                    
+                    pair = pair.split('=');
+                    updates[pair[0]] = pair[1];
+                }
+            }
+
+            // Get current URL
+            const url = new URL(window.location);
+
+            // Set/update query params
+            for (let key in updates) {
+                if (url.searchParams.get(key) !== updates[key]) {
+                    url.searchParams.set(key, updates[key]);
+                }
+            }
+
+            window.history.pushState({}, '', url);
+        },
+
+        resetFiltersInUrl() {
+            if (!this.urlMode) {
+                return;
+            }
+
+            // Get current URL
+            const url = new URL(window.location);
+
+            // Remove query params (filters, sort, page)
+            const toDelete = [];
+
+            for (let param of url.searchParams) {
+                const key = param[0];
+
+                if (key.startsWith('f_')) {
+                    toDelete.push(key);
+                }
+            }
+
+            for (let key of toDelete) {
+                url.searchParams.delete(key);
+            }
+
+            window.history.pushState({}, '', url);
+        },
     }
 }
 </script>
