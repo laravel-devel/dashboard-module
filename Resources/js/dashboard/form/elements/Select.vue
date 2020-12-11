@@ -154,7 +154,6 @@ export default {
             // If the option has suboptions - add them
             if (option.options) {
                 for (let suboption of option.options) {
-                    // console.log(suboption);
                     ungrouppedOptions.push(Object.assign(suboption, {
                         isSubitem: true,
                     }));
@@ -166,7 +165,6 @@ export default {
 
         // Select selected options
         if (this.value) {
-            // console.log(this.value);
             const value = Array.isArray(this.value) ? this.value : [this.value];
 
             for (let item of value) {
@@ -383,7 +381,11 @@ export default {
             this.search = '';
 
             for (let option of this.selections) {
-                const item = this.options.find(item => item[this.idField] === option);
+                const item = this.options.find(item => {
+                    return item[this.idField] === option
+                        || item[this.idField] === (option !== null ? Number(option) : option)
+                        || item[this.idField] === (option === '' ? null : option);
+                });
 
                 if (item) {
                     // Push a clone of the object, not the original object!
