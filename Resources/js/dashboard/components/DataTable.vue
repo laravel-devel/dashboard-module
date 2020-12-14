@@ -405,8 +405,6 @@ export default {
         registerEvents() {
             if (this.urlMode) {
                 window.addEventListener('popstate', (event) => {
-                    console.log('PoP!');
-
                     // Block watchers that re-fetch data
                     this.initialized = false;
 
