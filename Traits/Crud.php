@@ -600,11 +600,11 @@ trait Crud
      * Prepare the base query for a bulk action.
      *
      * @param mixed $request
-     * @return void
+     * @return object
      */
     public function prepareBulkActionQuery($request)
     {
-        $ids = $request->get('items');
+        $ids = $request->input('items');
 
         if (!count($ids)) {
             return null;
@@ -617,7 +617,7 @@ trait Crud
             $query->filter($request)
                 ->search($request->search);
         } else {
-            $query->whereIn('product_id', $ids);
+            $query->whereIn((new $this->modelClass)->getRouteKeyName(), $ids);
         }
 
         return $query;
