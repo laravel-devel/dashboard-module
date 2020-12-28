@@ -148,7 +148,7 @@
 
                         <td v-if="hasActions" class="actions">
                             <template v-for="(action, index) in allActions.single">
-                                <el-dropdown v-if="isActionsList(action)"
+                                <el-dropdown v-if="isActionsList(action) && showActionForItem(action, item)"
                                     :key="index"
                                     @command="onDropdownActionClick"
                                 >
@@ -174,7 +174,7 @@
                                     </el-dropdown-menu>
                                 </el-dropdown>
 
-                                <a v-else-if="!action.grouped && allowedTo(action.name) && showActionForItem(action, item)"
+                                <a v-else-if="!isActionsList(action) && !action.grouped && allowedTo(action.name) && showActionForItem(action, item)"
                                     :key="index"
                                     href="#"
                                     :class="`action-btn ${action.class ? action.class : 'primary'}`"
