@@ -2,6 +2,9 @@
     <div class="left"></div>
 
     <div class="right">
+        {{ Auth::user()->name }}
+        ({{ Auth::user()->roles->pluck('name')->join(', ') }})
+        |
         <a href="#" onclick="document.getElementById('logout').submit()">Logout</a>
 
         <form id="logout"
