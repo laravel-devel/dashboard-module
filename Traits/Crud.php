@@ -135,22 +135,33 @@ trait Crud
     {
         foreach ($actions as $action => $values) {
             $route = null;
+            $url = null;
+            $params = null;
 
             if (is_numeric(array_keys($values)[0])) {
-                $collection[$action] = [
-                    'url' => route($values[0], $values[1] ?? null),
-                ];
-
                 $route = $values[0];
+                $params = $values[2] ?? null;
+                $url = route($values[0], $values[1] ?? null);
+
+                $values = [];
             } else {
                 if (isset($values['url'])) {
                     $route = $values['url'][0];
-
-                    $values['url'] = route($values['url'][0], $values['url'][1] ?? null);
+                    $params = $values['url'][2] ?? null;
+                    $url = route($values['url'][0], $values['url'][1] ?? null);
                 }
-
-                $collection[$action] = $values;
             }
+
+            if ($params) {
+                $params = array_map(function ($key) use ($params) {
+                    return $key . '=' . $params[$key];
+                }, array_keys($params));
+
+                $url .= '?' . implode('&', $params);
+            }
+
+            $values['url'] = $url;
+            $collection[$action] = $values;
 
             // Set permissions for each route
             if ($route) {
