@@ -885,7 +885,9 @@ export default {
                 // Apply filters to the URL for bulk actions
                 const filters = this.makeFiltersQuery();
 
-                return `${url}?search=${this.searchQuery}${filters}`;
+                return url.indexOf('?') === -1
+                    ? `${url}?search=${this.searchQuery}${filters}`
+                    : `${url}&search=${this.searchQuery}${filters}`;
             }
 
             const params = url.match(new RegExp(':([a-zA-Z].*?)[^\/|$|\.]*', 'g'));
