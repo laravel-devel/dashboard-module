@@ -53,6 +53,11 @@
                         @change="onBulkActionSelected"></v-form-el>
                 </div>
 
+                <a v-if="this.exportableFields && Object.keys(this.exportableFields).length"
+                    href="#"
+                    class="btn"
+                    @click.prevent="showExportModal">Export</a>
+
                 <div v-if="searchOn">
                     <span class="mr-1">Search:</span>
 
@@ -202,6 +207,77 @@
         <v-paginator :page="page"
             :info="tableData"
             @pageChanged="onPageChanged"></v-paginator>
+
+        <v-modal m-id="export-modal">
+            <p class="text-bold mb-1">
+                Export {{ selectedItemsCount }} selected items
+            </p>
+
+            <v-form :action="this.export.url"
+                method="POST"
+                :button="{
+                    text: 'Export Data'
+                }"
+                @submitsuccess="onExportDataReady"
+            >
+                <template v-slot:default="slotProps">
+                    <v-form-tab name="Main"
+                        :errors="slotProps.errors"
+                        :values="slotProps.values"
+                    >
+                        <div class="flex">
+                            <v-form-el v-for="(key, index) in Object.keys(exportableFields)"
+                                :key="index"
+                                :inline="true"
+                                :field="{
+                                    name: 'export_fields[]',
+                                    type: 'checkbox',
+                                    label: exportableFields[key].name,
+                                    value: exportableFields[key].name + '|' + key + '|' + (exportableFields[key].format ? exportableFields[key].format : key),
+                                    checked: exportableFields[key].selected,
+                                }"
+                                ></v-form-el>
+                        </div>
+
+                        <v-form-el :inline="true"
+                            :field="{
+                                name: 'export_format',
+                                type: 'select',
+                                label: 'Format',
+                                attrs: {
+                                    idField: 'value',
+                                    textField: 'text',
+                                    required: true,
+                                },
+                                options: [
+                                    { value: 'csv', text: 'CSV', },
+                                    { value: 'txt', text: 'Text', },
+                                ],
+                            }"
+                            ></v-form-el>
+
+                        <template v-if="selectedItems.all">
+                            <v-form-el :field="{
+                                name: 'items[]',
+                                type: 'hidden',
+                                value: 'all',
+                            }"></v-form-el>
+                        </template>
+
+                        <template v-else>
+                            <template v-for="(index, loopIndex) in Object.keys
+                            (selectedItems)">
+                                <input v-if="index !== 'all'"
+                                    :key="loopIndex"
+                                    type="hidden"
+                                    name="items[]"
+                                    :value="items[index][primaryKey]">
+                            </template>
+                        </template>
+                    </v-form-tab>
+                </template>
+            </v-form>
+        </v-modal>
         
         <slot name="after"></slot>
     </div>
@@ -262,6 +338,19 @@ export default {
             default: true,
         },
 
+        // Data export options. Format:
+        // {
+        //        url: String 'backend endpoint',
+        //        fields: Array [list of available fields] | String 'all',
+        //        selected: Array [list of fields selected by default],
+        // }
+        export: {
+            type: Object,
+            default: function () {
+                return {};
+            },
+        },
+
         clientSideSorting: {
             type: Boolean,
             default: false,
@@ -317,6 +406,12 @@ export default {
                 + (this.hasActions ? 1 : 0)
         },
 
+        selectedItemsCount() {
+            return this.selectedItems.all
+                ? this.tableData.total
+                : (Object.keys(this.selectedItems).length - 1);
+        },
+
         hasHiddenFilters() {
             return this.filterFields.filter(item => item.hidden).length > 0;
         }
@@ -337,6 +432,7 @@ export default {
             searchQuery: '',
             searchTimeout: null,
             visibleFields: {},
+            exportableFields: {},
 
             filterFields: [],
             showHiddenFilters: false,
@@ -363,6 +459,7 @@ export default {
         this.parseFilters();
         this.parseActions();
         this.parseBulkActions();
+        this.parseExportOptions();
         this.registerEvents();
 
         this.$nextTick(() => {
@@ -663,6 +760,32 @@ export default {
                         options: action.options,
                     });
                 }
+            }
+        },
+
+        parseExportOptions() {
+            if (!this.export || !this.export.url || !this.export.fields) {
+                return;
+            }
+
+            const fields = this.export.fields === 'all'
+                ? Object.keys(this.visibleFields)
+                : this.export.fields;
+
+            const selected = this.export.selected ? this.export.selected : [];
+
+            this.exportableFields = Object.assign({});
+
+            for (let field of fields) {
+                if (!this.visibleFields.hasOwnProperty(field)) {
+                    continue;
+                }
+
+                this.exportableFields[field] = {
+                    name: this.visibleFields[field].name,
+                    format: this.visibleFields[field].format,
+                    selected: selected.indexOf(field) !== -1,
+                };
             }
         },
 
@@ -1188,6 +1311,51 @@ export default {
 
             window.history.pushState({}, '', url);
         },
+
+        showExportModal() {
+            if (!Object.keys(this.selectedItems).length) {
+                this.$notify({
+                    title: 'Action error',
+                    message: 'Select items to export',
+                    type: 'error' 
+                });
+
+                return;
+            }
+
+            this.$showModal('export-modal');
+        },
+
+        onExportDataReady(data) {
+            const contents = data.data;
+            const format = data.format;
+            const filename = 'export-'
+                + moment().format('Y-MM-DD-HH-mm-ss')
+                + `.${format}`;
+
+            this.promptFileDownload(contents, format, filename);
+        },
+
+        promptFileDownload(contents, format, filename) {
+            const element = document.createElement('a');
+            const mime = {
+                csv: 'text/csv',
+                txt: 'text/plain',
+            }[format];
+
+            element.style.display = 'none';
+            element.setAttribute('download', filename);
+            element.setAttribute(
+                'href', 
+                `data:${mime};charset=utf-8,${encodeURIComponent(contents)}`
+            );
+
+            document.body.appendChild(element);
+
+            element.click();
+
+            document.body.removeChild(element);
+        }
     }
 }
 </script>

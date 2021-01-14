@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Modules\DevelDashboard\Http\Requests\BulkRequest;
+use Modules\DevelDashboard\Http\Requests\ExportDataRequest;
 
 trait Crud
 {
@@ -632,5 +633,111 @@ trait Crud
         }
 
         return $query;
+    }
+
+    /**
+     * Export (datatble) data (selected items).
+     *
+     * @param ExportDataRequest $request
+     * @return Response
+     */
+    public function exportData(ExportDataRequest $request)
+    {
+        $query = $this->prepareBulkActionQuery($request);
+        $fields = $request->input('export_fields');
+        $format = $request->input('export_format');
+
+        $data = [];
+
+        $query->chunkById(2500, function ($chunk) use (&$data, $fields) {
+            foreach ($chunk as $chunkItem) {
+                $item = [];
+
+                foreach ($fields as $field) {
+                    [$name, $field, $format] = explode('|', $field);
+
+                    if ($field === $format) {
+                        $value = $chunkItem->{$field};
+                    } else {
+                        $format = str_replace('value', $chunkItem->{$field}, $format);
+                        $format = str_replace('item', '$chunkItem', $format);
+                        $format = str_replace('.', '->', $format);
+
+                        $value = eval("return {$format};");
+                    }
+
+                    $value = str_replace(
+                        ['<br>', '<br/>', '<br />'],
+                        "\n",
+                        $value
+                    );
+                    $item[$field] = strip_tags($value);
+                }
+
+                $data[] = $item;
+            }
+        }, (new $this->modelClass)->getRouteKeyName());
+
+        $dataFields = array_map(function ($item) {
+            return explode('|', $item)[0];
+        }, $fields);
+
+        $method = 'formatExportDataTo' . ucfirst($format);
+
+        return response()->json([
+            'data' => $this->{$method}($data, $dataFields),
+            'format' => $format,
+        ]);
+    }
+
+    /**
+     * Format export data as CSV
+     *
+     * @param array $data
+     * @param array $fields
+     * @return string
+     */
+    public function formatExportDataToCsv(array $data, array $fields): string
+    {
+        $csv = fopen('php://temp/maxmemory:'. (5 * 1024 * 1024), 'r+');
+
+        fputcsv($csv, $fields);
+
+        foreach ($data as $row) {
+            fputcsv($csv, array_values($row));
+        }
+
+        rewind($csv);
+
+        return stream_get_contents($csv);
+    }
+
+    /**
+     * Format export data as CSV
+     *
+     * @param array $data
+     * @param array $fields
+     * @return string
+     */
+    public function formatExportDataToTxt(array $data, array $fields): string
+    {
+        $formatted = '';
+
+        foreach ($data as $row) {
+            $cols = [];
+
+            foreach ($fields as $i => $field) {
+                $value = array_values($row)[$i];
+
+                $cols[] = "{$field}: {$value}";
+            }
+
+            $row = implode(' | ', $cols);
+            $row = preg_replace('/[\n]{1,}/', '; ', $row);
+
+            $formatted .= $row . "\n";
+        }
+
+        return $formatted;
     }
 }
