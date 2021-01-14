@@ -643,7 +643,10 @@ trait Crud
      */
     public function exportData(ExportDataRequest $request)
     {
-        $query = $this->prepareBulkActionQuery($request);
+        $query = $this->prepareBulkActionQuery($request)
+            ->filter($request)
+            ->search($request->search);
+
         $fields = $request->input('export_fields');
         $format = $request->input('export_format');
 

@@ -213,7 +213,7 @@
                 Export {{ selectedItemsCount }} selected items
             </p>
 
-            <v-form :action="this.export.url"
+            <v-form :action="exportUrl"
                 method="POST"
                 :button="{
                     text: 'Export Data'
@@ -414,6 +414,15 @@ export default {
 
         hasHiddenFilters() {
             return this.filterFields.filter(item => item.hidden).length > 0;
+        },
+
+        exportUrl() {
+            const url = this.export.url;
+            const filters = this.makeFiltersQuery();
+
+            return url.indexOf('?') === -1
+                ? `${url}?search=${this.searchQuery}${filters}`
+                : `${url}&search=${this.searchQuery}${filters}`;
         }
     },
 
