@@ -1189,6 +1189,10 @@ export default {
             const selected = !this.allPageItemsSelected;
 
             for (let item of this.items) {
+                if (item._selectable === false) {
+                    continue;
+                }
+
                 this.$set(
                     this.selectedItems,
                     this.primaryKey(item),
