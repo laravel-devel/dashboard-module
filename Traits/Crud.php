@@ -21,6 +21,13 @@ trait Crud
     protected $modelClass;
 
     /**
+     * A model's primary key. Composite keys are supported.
+     *
+     * @var string
+     */
+    protected $primaryKey;
+
+    /**
      * Form Request class.
      *
      * @var string
@@ -78,6 +85,27 @@ trait Crud
     protected function setModel(string $class): void
     {
         $this->modelClass = $class;
+    }
+
+    /**
+     * Set the model's primary key
+     *
+     * @param string $primaryKey
+     * @return void
+     */
+    protected function setPrimaryKey(string $primaryKey): void
+    {
+        $this->primaryKey = $primaryKey;
+    }
+
+    /**
+     * Get the model's primary key
+     *
+     * @return string
+     */
+    protected function getPrimaryKey(): string
+    {
+        return $this->primaryKey ?: (new $this->modelClass)->getRouteKeyName();
     }
 
     /**
@@ -198,9 +226,7 @@ trait Crud
      */
     public function datatable(): array
     {
-        $model = $this->model();
-
-        $this->datatableFields['_primary_key'] = (new $model)->getRouteKeyName();
+        $this->datatableFields['_primary_key'] = $this->getPrimaryKey();
 
         return $this->datatableFields;
     }
@@ -327,13 +353,13 @@ trait Crud
      */
     public function update(Request $request, $id)
     {
-        if (($can = $this->canBeEdited($request, $id)) !== true) {
+        $item = $this->model()::findOrFail($id);
+
+        if (($can = $this->canBeEdited($request, $item)) !== true) {
             return response()->json([
                 'message' => $can,
             ], 409);
         }
-
-        $item = $this->model()::findOrFail($id);
 
         $item = $this->storeOrUpdate($request, $item);
 
@@ -349,15 +375,13 @@ trait Crud
      */
     public function destroy(Request $request, $id)
     {
-        if (($can = $this->canBeDeleted($request, $id)) !== true) {
+        $object = $this->model()::where($this->getPrimaryKey(), $id)->first();
+
+        if (($can = $this->canBeDeleted($request, $object)) !== true) {
             return response()->json([
                 'message' => $can,
             ], 409);
         }
-
-        $model = new $this->modelClass;
-
-        $object = $this->model()::where($model->getRouteKeyName(), $id)->first();
 
         if (!$object) {
             return response()->json([
@@ -378,39 +402,16 @@ trait Crud
      */
     public function bulkDestroy(BulkRequest $request)
     {
-        $ids = $request->get('items');
+        $query = $this->prepareBulkActionQuery($request);
 
-        if (!count($ids)) {
-            return response()->json([]);
-        }
-
-        $model = new $this->modelClass;
-
-        if ($ids[0] === 'all') {
-            // Select all filtered ids
-            $ids = $this->model()::select($model->getRouteKeyName())
-                ->filter($request)
-                ->search($request->search)
-                ->get()
-                ->pluck($model->getRouteKeyName())
-                ->toArray();
-        }
-
-        foreach ($ids as $id) {
-            if (($can = $this->canBeDeleted($request, $id)) !== true) {
-                return response()->json([
-                    'message' => $can,
-                ], 409);
-            }
-        }
-
-        $this->model()::whereIn($model->getRouteKeyName(), $ids)
-            ->chunk(500, function ($items) {
-                foreach ($items as $item) {
-                    // Calling delete on each object separately to trigger Model events
+        $query->chunk(2500, function ($items) use ($request) {
+            foreach ($items as $item) {
+                // Calling delete on each object separately to trigger Model events
+                if ($this->canBeDeleted($request, $item)) {
                     $item->delete();
                 }
-            });
+            }
+        });
 
         return response()->json([]);
     }
@@ -419,10 +420,10 @@ trait Crud
      * Determine whether an item can be edited.
      *
      * @param Request $request
-     * @param mixed $id
+     * @param mixed $item
      * @return mixed
      */
-    protected function canBeEdited($request, $id)
+    protected function canBeEdited($request, $item)
     {
         return true;
     }
@@ -431,10 +432,10 @@ trait Crud
      * Determine whether an item can be deleted.
      *
      * @param Request $request
-     * @param mixed $id
+     * @param mixed $item
      * @return mixed
      */
-    protected function canBeDeleted($request, $id)
+    protected function canBeDeleted($request, $item)
     {
         return true;
     }
@@ -457,7 +458,7 @@ trait Crud
         $model = $this->model();
         $model = new $model;
 
-        $table = $model->getTable();
+        $table = $this->getModelTable();
         $columns = Schema::getColumnListing($table);
 
         foreach ($columns as $field) {
@@ -622,14 +623,34 @@ trait Crud
             return null;
         }
 
+        $table = $this->getModelTable();
         $query = $this->model()::query();
 
         if ($ids[0] === 'all') {
             // Apply filters
-            $query->filter($request)
+            return $query->filter($request)
                 ->search($request->search);
+        }
+
+        $pk = $this->getPrimaryKey();
+
+        if (strpos($pk, '|') === false) {
+            // Simple key
+            $query->whereIn("{$table}.{$pk}", $ids);
         } else {
-            $query->whereIn((new $this->modelClass)->getRouteKeyName(), $ids);
+            // Composite key
+            $query->where(function ($q) use ($ids, $pk, $table) {
+                foreach ($ids as $id) {
+                    $pkFields = explode('|', $pk);
+                    $pkValues = explode('|', $id);
+
+                    $q->orWhere(function ($q2) use ($pkFields, $pkValues, $table) {
+                        for ($i = 0; $i < count($pkFields); $i++) {
+                            $q2->where("{$table}.{$pkFields[$i]}", $pkValues[$i]);
+                        }
+                    });
+                }
+            });
         }
 
         return $query;
@@ -679,7 +700,7 @@ trait Crud
 
                 $data[] = $item;
             }
-        }, (new $this->modelClass)->getRouteKeyName());
+        }, $this->getPrimaryKey());
 
         $dataFields = array_map(function ($item) {
             return explode('|', $item)[0];

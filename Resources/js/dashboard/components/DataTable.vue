@@ -1,6 +1,6 @@
 <template>
     <div class="datatable">
-        <slot name="before"></slot>
+        <slot name="before" :tableData="tableData"></slot>
 
         <div v-if="this.filterFields.length > 0">
             <p class="mb-1">
@@ -71,7 +71,7 @@
             </div>
 
             <div class="flex flex-align-end top-panel-extra">
-                <slot name="top-panel"></slot>
+                <slot name="top-panel" :tableData="tableData"></slot>
 
                 <a v-if="createAction && allowedTo('create')"
                     :href="createAction.url"
@@ -87,7 +87,7 @@
                             :field="{
                                 type: 'checkbox'
                             }"
-                            v-model="selectedItemsAllPage"
+                            :value="allPageItemsSelected"
                             @change="onSelectAllToggle"></v-form-el>
                     </th>
 
@@ -111,7 +111,7 @@
                 </thead>
                 
                 <tbody>
-                    <tr v-if="selectedItemsAllPage && !this.selectedItems.all">
+                    <tr v-if="allPageItemsSelected && !this.selectedItems._all">
                         <td :colspan="columnsCount" class="text-center">
                             All items on this page are selected.
                             <a href="#" @click.prevent="selectAllItems">
@@ -129,12 +129,12 @@
                             'text-success': item._style_text_success,
                         }"
                     >
-                        <td v-if="bulkActionsOn && hasBulkActions" class="bulk-actions">
+                        <td v-if="bulkActionsOn && hasBulkActions && item._selectable !== false" class="bulk-actions">
                             <v-form-el :inline="true"
                                 :field="{
                                     type: 'checkbox'
                                 }"
-                                v-model="selectedItems[index]"
+                                v-model="selectedItems[primaryKey(item)]"
                                 @change="onItemSelectionToggled(item)"></v-form-el>
                         </td>
 
@@ -208,7 +208,7 @@
             :info="tableData"
             @pageChanged="onPageChanged"></v-paginator>
 
-        <v-modal m-id="export-modal">
+        <v-modal v-if="exportOn" m-id="export-modal">
             <p class="text-bold mb-1">
                 Export {{ selectedItemsCount }} selected items
             </p>
@@ -256,30 +256,30 @@
                             }"
                             ></v-form-el>
 
-                        <template v-if="selectedItems.all">
+                        <template v-if="selectedItems._all">
                             <v-form-el :field="{
                                 name: 'items[]',
                                 type: 'hidden',
-                                value: 'all',
+                                value: '_all',
                             }"></v-form-el>
                         </template>
 
                         <template v-else>
                             <template v-for="(index, loopIndex) in Object.keys
                             (selectedItems)">
-                                <input v-if="index !== 'all'"
+                                <input v-if="index !== '_all'"
                                     :key="loopIndex"
                                     type="hidden"
                                     name="items[]"
-                                    :value="items[index][primaryKey]">
+                                    :value="primaryKey(items[index])">
                             </template>
                         </template>
                     </v-form-tab>
                 </template>
             </v-form>
         </v-modal>
-        
-        <slot name="after"></slot>
+
+        <slot name="after" :tableData="tableData"></slot>
     </div>
 </template>
 
@@ -389,7 +389,9 @@ export default {
             // Filters
             const filters = this.makeFiltersQuery();
 
-            return `${this.baseUrl}?page=${this.page}&sort=${this.sort}|${this.sortAsc ? 'asc' : 'desc'}&search=${this.searchQuery}${filters}`;
+            const connector = (this.baseUrl.indexOf('?') > -1) ? '&' : '?';
+
+            return `${this.baseUrl}${connector}page=${this.page}&sort=${this.sort}|${this.sortAsc ? 'asc' : 'desc'}&search=${this.searchQuery}${filters}`;
         },
 
         hasActions() {
@@ -407,13 +409,17 @@ export default {
         },
 
         selectedItemsCount() {
-            return this.selectedItems.all
+            return this.selectedItems._all
                 ? this.tableData.total
-                : (Object.keys(this.selectedItems).length - 1);
+                : (Object.keys(this.selectedItems).length - 1);;
         },
 
         hasHiddenFilters() {
             return this.filterFields.filter(item => item.hidden).length > 0;
+        },
+
+        exportOn() {
+            return this.export && this.export.url && this.export.fields;
         },
 
         exportUrl() {
@@ -423,6 +429,22 @@ export default {
             return url.indexOf('?') === -1
                 ? `${url}?search=${this.searchQuery}${filters}`
                 : `${url}&search=${this.searchQuery}${filters}`;
+        },
+
+        allPageItemsSelected() {
+            let selectedOnPage = 0;
+
+            for (let item of this.items) {
+                const key = this.primaryKey(item);
+
+                if (this.selectedItems[key] || item._selectable === false) {
+                    selectedOnPage++;
+                }
+            }
+
+            return (
+                this.items.length > 0 && this.items.length === selectedOnPage 
+            );
         }
     },
 
@@ -434,7 +456,6 @@ export default {
             items: [],
             filteredItems: [],
             selectedItems: {},
-            selectedItemsAllPage: false,
             page: 1,
             sort: Object.keys(this.fields)[0],
             sortAsc: true,
@@ -451,13 +472,15 @@ export default {
                 bulk: [],
             },
             createAction: null,
-            primaryKey: '',
+            primaryKeyFormat: 'id',
 
             bulkActionsSelect: {
                 attrs: {},
                 collection: {},
             },
             selectedBulkAction: [],
+
+            filterDebounceTimeout: null,
         };
     },
  
@@ -508,6 +531,19 @@ export default {
      },
 
     methods: {
+        /**
+         * Get primary key value for an item. Composite keys are supported.
+         */
+        primaryKey(item) {
+            const value = [];
+
+            this.primaryKeyFormat.split('|').forEach((field) => {
+                value.push(item[field])
+            });
+
+            return value.join('|');
+        },
+
         registerEvents() {
             if (this.urlMode) {
                 window.addEventListener('popstate', (event) => {
@@ -529,7 +565,7 @@ export default {
         parseFields() {
             for (let key of Object.keys(this.fields)) {
                 if (key === '_primary_key') {
-                    this.primaryKey = this.fields[key];
+                    this.primaryKeyFormat = this.fields[key];
 
                     continue;
                 }
@@ -662,7 +698,7 @@ export default {
         },
 
         parseAction(name, action) {
-            const isBulkAction = action.bulkUrl || action.bulk;
+            const isBulkAction = !! (action.bulkUrl || action.bulk);
 
             // If the action is a list of actions - add all its children too
             if (this.isActionsList(action)) {
@@ -773,7 +809,7 @@ export default {
         },
 
         parseExportOptions() {
-            if (!this.export || !this.export.url || !this.export.fields) {
+            if (!this.exportOn) {
                 return;
             }
 
@@ -802,7 +838,7 @@ export default {
             clearTimeout(this.searchTimeout);
 
             this.searchTimeout = setTimeout(() => {
-                this.$set(this.selectedItems, 'all', false);
+                this.$set(this.selectedItems, '_all', false);
 
                 this.fetchData();
             }, 250);
@@ -813,24 +849,19 @@ export default {
                 return;
             }
 
-            this.$set(this.selectedItems, 'all', false);
+            this.unselectAllItems();
 
             this.updateUrl(this.makeFiltersQuery());
+
+            clearTimeout(this.filterDebounceTimeout);
             
-            this.fetchData();
+            this.filterDebounceTimeout = setTimeout(() => {
+                this.fetchData();
+            }, 500);
         },
 
         onSelectedItemsChanged(newVal, oldVal) {
-            let selected = Object.keys(this.selectedItems).filter(key => {
-                if (key === 'all') {
-                    return false;
-                }
-                
-                return this.selectedItems[key];
-            });
-
-            this.selectedItemsAllPage = (selected.length === this.items.length
-                && this.items.length > 0);
+            //
         },
 
         onTableDataChanged() {
@@ -1084,31 +1115,23 @@ export default {
             let data = null;
 
             if (action.bulk) {
-                const indexes = Object.keys(this.selectedItems).filter(index => {
-                    return this.selectedItems[index];
-                });
+                let selected = [];
 
-                if (!indexes.length) {
-                    return;
+                if (this.selectedItems._all) {
+                    selected = ['all'];
+                } else {
+                    selected = Object.keys(this.selectedItems).filter(key => {
+                        return this.selectedItems[key];
+                    });
                 }
 
-                const selected = [];
-
-                // Populate data
-                if (indexes.indexOf('all') > -1) {
-                    selected.push('all');
-                } else {
-                    for (let i of indexes) {
-                        const item = this.items[i];
-
-                        selected.push(item[this.primaryKey]);
-                    }
+                if (!selected.length) {
+                    return;
                 }
                 
                 data = { items: selected };
 
-                // Unselect all the items
-                this.selectedItems = Object.assign({});
+                this.unselectAllItems();
             }
 
             // A custom action - just fire an event
@@ -1157,19 +1180,25 @@ export default {
         },
 
         onItemSelectionToggled(item) {
-            this.$set(this.selectedItems, 'all', false);
+            this.$set(this.selectedItems, '_all', false);
         },
 
         onSelectAllToggle() {
-            this.$set(this.selectedItems, 'all', false);
+            this.$set(this.selectedItems, '_all', false);
 
-            for (let i = 0; i < this.items.length; i++) {
-                this.$set(this.selectedItems, i, this.selectedItemsAllPage);
+            const selected = !this.allPageItemsSelected;
+
+            for (let item of this.items) {
+                this.$set(
+                    this.selectedItems,
+                    this.primaryKey(item),
+                    selected
+                );
             }
         },
 
         selectAllItems() {
-            this.$set(this.selectedItems, 'all', true);
+            this.$set(this.selectedItems, '_all', true);
         },
 
         onBulkActionSelected() {
@@ -1364,6 +1393,12 @@ export default {
             element.click();
 
             document.body.removeChild(element);
+        },
+
+        unselectAllItems() {
+            this.selectedItems = Object.assign({}, {
+                _all: false,
+            });
         }
     }
 }
