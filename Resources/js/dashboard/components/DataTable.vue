@@ -829,6 +829,10 @@ export default {
             this.exportableFields = Object.assign({});
 
             for (let field of fields) {
+                if (field.startsWith('_')) {
+                    continue;
+                }
+
                 const tableField = this.fields[field];
 
                 let name = field;
