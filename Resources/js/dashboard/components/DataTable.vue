@@ -233,7 +233,9 @@
                                     name: 'export_fields[]',
                                     type: 'checkbox',
                                     label: exportableFields[key].name,
-                                    value: exportableFields[key].name + '|' + key + '|' + (exportableFields[key].format ? exportableFields[key].format : key),
+                                    value: exportableFields[key].name
+                                        + '|' + key
+                                        + '|' + (exportFormat(key)),
                                     checked: exportableFields[key].selected,
                                 }"
                                 ></v-form-el>
@@ -271,7 +273,7 @@
                                     :key="loopIndex"
                                     type="hidden"
                                     name="items[]"
-                                    :value="primaryKey(items[index])">
+                                    :value="index">
                             </template>
                         </template>
                     </v-form-tab>
@@ -343,6 +345,7 @@ export default {
         //        url: String 'backend endpoint',
         //        fields: Array [list of available fields] | String 'all',
         //        selected: Array [list of fields selected by default],
+        //        filenamePrefix: String
         // }
         export: {
             type: Object,
@@ -427,8 +430,8 @@ export default {
             const filters = this.makeFiltersQuery();
 
             return url.indexOf('?') === -1
-                ? `${url}?search=${this.searchQuery}${filters}`
-                : `${url}&search=${this.searchQuery}${filters}`;
+                ? `${url}?search=${this.searchQuery}&sort=${this.sort}${filters}`
+                : `${url}&search=${this.searchQuery}&sort=${this.sort}${filters}`;
         },
 
         allPageItemsSelected() {
@@ -567,6 +570,10 @@ export default {
                 if (key === '_primary_key') {
                     this.primaryKeyFormat = this.fields[key];
 
+                    continue;
+                }
+
+                if (this.fields[key].exportOnly === true) {
                     continue;
                 }
 
@@ -814,7 +821,7 @@ export default {
             }
 
             const fields = this.export.fields === 'all'
-                ? Object.keys(this.visibleFields)
+                ? Object.keys(this.fields)
                 : this.export.fields;
 
             const selected = this.export.selected ? this.export.selected : [];
@@ -822,13 +829,22 @@ export default {
             this.exportableFields = Object.assign({});
 
             for (let field of fields) {
-                if (!this.visibleFields.hasOwnProperty(field)) {
-                    continue;
+                const tableField = this.fields[field];
+
+                let name = field;
+                let format = null;
+
+                if (tableField) {
+                    name = tableField.name;
+
+                    format = tableField.exportFormat
+                        ? tableField.exportFormat
+                        : tableField.format;
                 }
 
                 this.exportableFields[field] = {
-                    name: this.visibleFields[field].name,
-                    format: this.visibleFields[field].format,
+                    name: name,
+                    format: format,
                     selected: selected.indexOf(field) !== -1,
                 };
             }
@@ -1368,10 +1384,21 @@ export default {
             this.$showModal('export-modal');
         },
 
+        exportFormat(key) {
+            return this.exportableFields[key].format
+                ? this.exportableFields[key].format
+                : key;
+        },
+
         onExportDataReady(data) {
             const contents = data.data;
             const format = data.format;
-            const filename = 'export-'
+
+            const prefix = this.export.filenamePrefix
+                ? this.export.filenamePrefix
+                : 'export-';
+
+            const filename = prefix
                 + moment().format('Y-MM-DD-HH-mm-ss')
                 + `.${format}`;
 

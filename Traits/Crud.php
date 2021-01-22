@@ -665,6 +665,7 @@ trait Crud
     public function exportData(ExportDataRequest $request)
     {
         $query = $this->prepareBulkActionQuery($request)
+            ->sort($request->sort)
             ->filter($request)
             ->search($request->search);
 
@@ -683,7 +684,13 @@ trait Crud
                     if ($field === $format) {
                         $value = $chunkItem->{$field};
                     } else {
-                        $format = str_replace('value', $chunkItem->{$field}, $format);
+                        $fieldValue = $chunkItem->{$field};
+
+                        if (is_bool($fieldValue)) {
+                            $fieldValue = $fieldValue ? 'true' : 'false';
+                        }
+
+                        $format = str_replace('value', $fieldValue, $format);
                         $format = str_replace('item', '$chunkItem', $format);
                         $format = str_replace('.', '->', $format);
 
