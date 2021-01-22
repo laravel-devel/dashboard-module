@@ -303,9 +303,11 @@ trait Crud
     /**
      * API. Return a resource collection.
      *
-     * @return Response
+     * @param Request $request
+     * @param boolean $returnQuery
+     * @return Response|Illuminate\Database\Eloquent\Builder
      */
-    public function get(Request $request)
+    public function get(Request $request, $returnQuery = false)
     {
         $this->withDatatable();
         $table = $this->getModelTable();
@@ -316,6 +318,10 @@ trait Crud
             ->search($request->search);
 
         $query = $this->eagerLoadRelationships($query);
+
+        if ($returnQuery) {
+            return $query;
+        }
 
         return response()->json($query->paginate($this->itemsPerPage));
     }
@@ -664,10 +670,18 @@ trait Crud
      */
     public function exportData(ExportDataRequest $request)
     {
-        $query = $this->prepareBulkActionQuery($request)
+        $bulkQuery = $this->prepareBulkActionQuery($request)
             ->sort($request->sort)
             ->filter($request)
             ->search($request->search);
+
+        $query = $this->get($request, true)
+            ->tap(function ($builder) use ($bulkQuery) {
+                $builder->mergeWheres(
+                    $bulkQuery->getQuery()->wheres,
+                    $bulkQuery->getBindings()
+                );
+            });
 
         $fields = $request->input('export_fields');
         $format = $request->input('export_format');
