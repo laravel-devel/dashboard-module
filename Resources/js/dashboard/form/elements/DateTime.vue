@@ -35,7 +35,7 @@ export default {
 
     mounted() {
         // Set the default value
-        this.model = this.value ? new Date(this.value) : new Date();
+        this.model = this.value ? new Date(this.value) : null;
     },
 
     watch: {
