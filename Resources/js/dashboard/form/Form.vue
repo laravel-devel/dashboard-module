@@ -33,7 +33,10 @@
                 :read-only="readOnly"></v-form-tab>
         </slot>
 
-        <div class="message" :class="messageClass" v-text="message"></div>
+        <div v-show="!! message"
+            class="message"
+            :class="messageClass"
+            v-text="message"></div>
 
         <template v-if="!readOnly">
             <button v-if="button"
