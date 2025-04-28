@@ -148,10 +148,14 @@ class DevelDashboardServiceProvider extends ServiceProvider
                         throw new \Exception("Invalid dashboard sidebar menu entry for route \"{$route->uri}\".");
                     }
 
+                    // Remove un-replaced (optional) parameters from the URI
+                    $uri = preg_replace('/{.*?}/', '', $route->uri);
+                    $uri = trim($uri, '/');
+
                     SidebarMenu::addItem(
                         $parts[0],
                         array_slice($parts, 1),
-                        $route->uri
+                        $uri
                     );
                 }
             }
